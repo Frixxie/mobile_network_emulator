@@ -1,7 +1,7 @@
-use std::{error::Error, fmt::Display, net::IpAddr};
+use rand::prelude::*;
+use std::{error::Error, fmt::Display, iter::repeat, net::IpAddr};
 
 use geo::{MultiPoint, Point};
-use reqwest::Client;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PDUSession {
@@ -96,6 +96,41 @@ impl User {
         }
     }
 
+    pub fn generate_user_trail(bounds: (f64, f64), start_pos: Point, length: usize) -> MultiPoint {
+        let mut rng = rand::thread_rng();
+        // Generate changes
+        let diffs: Vec<(f64, f64)> = repeat((rng.gen_range(-1.0..1.), rng.gen_range(-1.0..1.)))
+            .take(length)
+            .collect();
+        // add changes to correct positions
+        repeat(start_pos.clone())
+            .take(length)
+            .enumerate()
+            .map(|(i, v)| {
+                diffs.iter().take(i).fold(v, |mut point, e| {
+                    let x = point.x();
+                    let y = point.y();
+                    *point
+                        .set_x((x + e.0) % bounds.0)
+                        .set_y((y + e.1) % bounds.1)
+                })
+            })
+            .collect()
+        // let mut res = Vec::new();
+        // res.push(start_pos);
+        // let diff = (rng.gen_range(-1.0..1.), rng.gen_range(-1.0..1.));
+        // for i in 0..length {
+        //     let mut point = res[i];
+        //     let x = point.x();
+        //     let y = point.y();
+        //     point
+        //         .set_x((x + diff.0) % bounds.0)
+        //         .set_y((y + diff.1) % bounds.1);
+        //     res.push(point);
+        // }
+        // MultiPoint(res)
+    }
+
     pub fn move_next(&mut self) -> usize {
         self.current_pos += 1;
         self.current_pos
@@ -104,5 +139,16 @@ impl User {
     pub fn move_prev(&mut self) -> usize {
         self.current_pos -= 1;
         self.current_pos
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn generate_trail() {
+        let trail = User::generate_user_trail((100., 100.), (50., 50.).into(), 1 << 7);
+        assert_eq!(trail.iter().count(), 1 << 7);
     }
 }
