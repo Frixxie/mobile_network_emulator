@@ -1,97 +1,40 @@
-use rand::prelude::*;
-use std::{error::Error, fmt::Display, iter::repeat, net::IpAddr};
-
 use geo::{MultiPoint, Point};
+use rand::Rng;
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct PDUSession {
-    ip_address: IpAddr,
-}
-
-#[derive(Debug)]
-pub struct UserError {
-    msg: String,
-}
-
-impl UserError {
-    pub fn new(msg: &str) -> Self {
-        UserError {
-            msg: msg.to_string(),
-        }
-    }
-}
-
-impl Display for UserError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&self.msg)
-    }
-}
-
-impl Error for UserError {}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum UserState {
-    Connected(PDUSession),
-    InReach,
-    OutOfReach,
-    Unknown,
-}
-
-impl Display for UserState {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let res = match self {
-            UserState::Connected(s) => format!("Connected, IP: {}", s.ip_address),
-            UserState::InReach => "InReach".to_string(),
-            UserState::OutOfReach => "OutOfReach".to_string(),
-            UserState::Unknown => "Unknown".to_string(),
-        };
-        f.write_str(&res)
-    }
-}
-
-#[derive(Clone, Debug)]
+#[derive(Debug, PartialEq)]
 pub struct User {
-    pub gpsi: u32,
-    pub state: UserState,
-    current_pos: usize,
-    trail: Option<MultiPoint>,
-}
-
-impl Display for User {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let point = self.current_pos().unwrap().x_y();
-        f.write_str(
-            &format!("{}, {}, ({}, {})", self.gpsi, self.state, point.0, point.1).to_string(),
-        )
-    }
+    id: u32,
+    posititon: usize,
+    path: Option<MultiPoint>,
 }
 
 impl User {
-    pub fn new(gpsi: u32) -> Self {
+    pub fn new(id: u32) -> Self {
         User {
-            gpsi,
-            state: UserState::Unknown,
-            current_pos: 0,
-            trail: None,
+            id,
+            posititon: 0,
+            path: None,
         }
     }
 
-    pub fn connect_mobile_network(&mut self, pdu_session: PDUSession) -> Result<IpAddr, UserError> {
-        if self.state == UserState::InReach {
-            self.state = UserState::Connected(pdu_session.clone());
-            return Ok(pdu_session.ip_address);
-        }
-        Err(UserError::new("UE is not in reach"))
-    }
-
-    pub fn add_trail(&mut self, points: Vec<Point>) {
-        self.trail = Some(MultiPoint::new(points));
-        self.current_pos = 0
+    pub fn add_path(&mut self, path: MultiPoint) {
+        self.path = Some(path);
     }
 
     pub fn current_pos(&self) -> Option<Point> {
-        match &self.trail {
-            Some(t) => t.iter().nth(self.current_pos).copied(),
+        match self.path {
+            Some(path) => path.iter().nth(self.posititon).copied(),
+            None => None,
+        }
+    }
+
+    pub fn next_pos(&mut self) -> Option<usize> {
+        match self.path {
+            Some(_) => {
+                self.posititon += 1;
+                self.posititon = self.posititon % self.path.iter().count();
+                Some(self.posititon)
+            }
             None => None,
         }
     }
@@ -110,21 +53,38 @@ impl User {
         }
         MultiPoint(res)
     }
-
-    pub fn move_next(&mut self) -> usize {
-        self.current_pos += 1;
-        self.current_pos
-    }
-
-    pub fn move_prev(&mut self) -> usize {
-        self.current_pos -= 1;
-        self.current_pos
-    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn path() {
+        let user = User::new(0);
+        let path = MultiPoint(vec![Point::new(0.0, 0.1), Point::new(1., 1.)]);
+
+        let current_pos = user.current_pos();
+        assert_eq!(current_pos, None);
+
+        let next_pos = user.next_pos();
+        assert_eq!(next_pos, None);
+
+        user.add_path(path);
+
+        let current_pos = user.current_pos().unwrap();
+        assert_eq!(current_pos, Point::new(0.0, 0.1));
+
+        let next_pos = user.next_pos().unwrap();
+        assert_eq!(next_pos, 1);
+        let current_pos = user.current_pos().unwrap();
+        assert_eq!(current_pos, Point::new(1., 1.));
+
+        let next_pos = user.next_pos().unwrap();
+        assert_eq!(next_pos, 0);
+        let current_pos = user.current_pos().unwrap();
+        assert_eq!(current_pos, Point::new(0.0, 0.1));
+    }
 
     #[test]
     fn generate_trail() {

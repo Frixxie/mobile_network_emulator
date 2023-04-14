@@ -1,46 +1,53 @@
-use geo::{Contains, Point, Rect};
+use geo::{Contains, Rect};
 
-use crate::user::User;
+use crate::{user::User, pdu_session::PDUSession};
 
-#[derive(Clone, Debug)]
-pub struct GNodeB {
-    id: u32,
-    pos: Point,
+pub struct Ran {
     cell: Rect,
+    connected_users: Vec<PDUSession>,
 }
 
-impl GNodeB {
-    pub fn new(id: u32, pos: Point, cell: Rect) -> Self {
-        GNodeB { id, pos, cell }
+impl Ran {
+    pub fn new(cell: Rect) -> Self {
+        Ran {
+            cell,
+            connected_users: Vec::new(),
+        }
+    }
+
+    pub fn connect_users(&mut self, mut users: Vec<PDUSession>) {
+        self.connected_users.append(&mut users);
+    }
+
+    pub fn disconnect_users(&mut self) -> Vec<PDUSession> {
+        todo!()
     }
 }
 
-impl Contains<User> for GNodeB {
+impl Contains<User> for Ran {
     fn contains(&self, rhs: &User) -> bool {
-        dbg!(self, rhs);
-        self.cell.contains(&rhs.current_pos().unwrap())
+        let user_pos = match rhs.current_pos() {
+            Some(pos) => pos,
+            None => panic!("User should have position before calling this function"),
+        };
+        self.cell.contains(&user_pos)
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use std::net::{IpAddr, Ipv4Addr};
+
+    use geo::Point;
+
     use super::*;
-    use geo::coord;
 
     #[test]
-    fn contains() {
-        let rect = Rect::new(coord! { x: 0., y: 0.}, coord! { x: 1., y: 1.});
-        let gnb = GNodeB::new(1, (0.5, 0.5).into(), rect);
-        let mut ue_inside = User::new(0);
-        let ue_point = Point::new(0.5, 0.5);
-        ue_inside.add_trail(vec![ue_point]);
-
-        let mut ue_outside = User::new(0);
-        let ue_point = Point::new(-1., -1.);
-        ue_outside.add_trail(vec![ue_point]);
-
-        if !gnb.contains(&ue_inside) || gnb.contains(&ue_outside) {
-            assert!(false);
-        }
+    fn connect_users() {
+        let mut ran = Ran::new(Rect::new(Point::new(0.0, 0.0), Point::new(1., 1.)));
+        let users: Vec<User> = (0..32).into_iter().map(|i| User::new(i)).collect();
+        let pdu_sessions = users.into_iter().map(|user| PDUSession::new(user, IpAddr::V4(Ipv4Addr::LOCALHOST))).collect();
+        ran.connect_users(pdu_sessions);
+        assert_eq!(ran.connected_users, pdu_sessions);
     }
 }

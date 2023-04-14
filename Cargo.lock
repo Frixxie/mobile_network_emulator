@@ -733,8 +733,8 @@ dependencies = [
  "geocoding",
  "gpx",
  "rand",
- "reqwest",
  "serde",
+ "url",
 ]
 
 [[package]]
