@@ -98,37 +98,17 @@ impl User {
 
     pub fn generate_user_trail(bounds: (f64, f64), start_pos: Point, length: usize) -> MultiPoint {
         let mut rng = rand::thread_rng();
-        // Generate changes
-        let diffs: Vec<(f64, f64)> = repeat((rng.gen_range(-1.0..1.), rng.gen_range(-1.0..1.)))
-            .take(length)
-            .collect();
-        // add changes to correct positions
-        repeat(start_pos.clone())
-            .take(length)
-            .enumerate()
-            .map(|(i, v)| {
-                diffs.iter().take(i).fold(v, |mut point, e| {
-                    let x = point.x();
-                    let y = point.y();
-                    *point
-                        .set_x((x + e.0) % bounds.0)
-                        .set_y((y + e.1) % bounds.1)
-                })
-            })
-            .collect()
-        // let mut res = Vec::new();
-        // res.push(start_pos);
-        // let diff = (rng.gen_range(-1.0..1.), rng.gen_range(-1.0..1.));
-        // for i in 0..length {
-        //     let mut point = res[i];
-        //     let x = point.x();
-        //     let y = point.y();
-        //     point
-        //         .set_x((x + diff.0) % bounds.0)
-        //         .set_y((y + diff.1) % bounds.1);
-        //     res.push(point);
-        // }
-        // MultiPoint(res)
+        let mut res = Vec::new();
+        res.push(start_pos);
+        for i in 0..length - 1 {
+            let diff = (rng.gen_range(-1.0..1.), rng.gen_range(-1.0..1.));
+            let point = Point::new(
+                (res[i].x() + diff.0) % bounds.0,
+                (res[i].y() + diff.1) % bounds.1,
+            );
+            res.push(point)
+        }
+        MultiPoint(res)
     }
 
     pub fn move_next(&mut self) -> usize {
