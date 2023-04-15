@@ -1,7 +1,7 @@
 use geo::{MultiPoint, Point};
 use rand::Rng;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct User {
     id: u32,
     posititon: usize,
@@ -22,17 +22,17 @@ impl User {
     }
 
     pub fn current_pos(&self) -> Option<Point> {
-        match self.path {
+        match &self.path {
             Some(path) => path.iter().nth(self.posititon).copied(),
             None => None,
         }
     }
 
     pub fn next_pos(&mut self) -> Option<usize> {
-        match self.path {
-            Some(_) => {
+        match &self.path {
+            Some(path) => {
                 self.posititon += 1;
-                self.posititon = self.posititon % self.path.iter().count();
+                self.posititon = self.posititon % path.iter().count();
                 Some(self.posititon)
             }
             None => None,
@@ -61,7 +61,7 @@ mod tests {
 
     #[test]
     fn path() {
-        let user = User::new(0);
+        let mut user = User::new(0);
         let path = MultiPoint(vec![Point::new(0.0, 0.1), Point::new(1., 1.)]);
 
         let current_pos = user.current_pos();

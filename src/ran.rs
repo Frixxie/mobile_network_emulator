@@ -1,6 +1,6 @@
 use geo::{Contains, Rect};
 
-use crate::{user::User, pdu_session::PDUSession};
+use crate::{pdu_session::PDUSession, user::User};
 
 pub struct Ran {
     cell: Rect,
@@ -45,9 +45,11 @@ mod tests {
     #[test]
     fn connect_users() {
         let mut ran = Ran::new(Rect::new(Point::new(0.0, 0.0), Point::new(1., 1.)));
-        let users: Vec<User> = (0..32).into_iter().map(|i| User::new(i)).collect();
-        let pdu_sessions = users.into_iter().map(|user| PDUSession::new(user, IpAddr::V4(Ipv4Addr::LOCALHOST))).collect();
-        ran.connect_users(pdu_sessions);
+        let pdu_sessions: Vec<PDUSession> = (0..32)
+            .into_iter()
+            .map(|i| PDUSession::new(User::new(i), IpAddr::V4(Ipv4Addr::LOCALHOST)))
+            .collect();
+        ran.connect_users(pdu_sessions.clone());
         assert_eq!(ran.connected_users, pdu_sessions);
     }
 }

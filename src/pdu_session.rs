@@ -3,7 +3,7 @@ use url::Url;
 
 use crate::user::User;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct PDUSession {
     user: User,
     ip_address: IpAddr,
@@ -14,7 +14,7 @@ impl PDUSession {
         PDUSession { user, ip_address }
     }
 
-    pub fn release(&mut self) -> (User, IpAddr) {
+    pub fn release(self) -> (User, IpAddr) {
         return (self.user, self.ip_address);
     }
 
