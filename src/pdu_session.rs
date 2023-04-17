@@ -34,7 +34,7 @@ mod tests {
         let user = User::new(1);
         let ip_address = Ipv4Addr::LOCALHOST;
 
-        let mut pbu_session = PDUSession::new(user, std::net::IpAddr::V4(ip_address));
+        let pbu_session = PDUSession::new(user, std::net::IpAddr::V4(ip_address));
         let (user_1, ip_address_1) = pbu_session.release();
         assert_eq!(User::new(1), user_1);
         assert_eq!(Ipv4Addr::LOCALHOST, ip_address_1);

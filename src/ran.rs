@@ -15,12 +15,16 @@ impl Ran {
         }
     }
 
-    pub fn connect_users(&mut self, mut users: Vec<PDUSession>) {
-        self.connected_users.append(&mut users);
+    pub fn get_connected_users(&mut self) -> Vec<PDUSession> {
+        self.connected_users.drain(..).collect()
     }
 
-    pub fn disconnect_users(&mut self) -> Vec<PDUSession> {
-        todo!()
+    pub fn connect_user(&mut self, user: PDUSession) {
+        self.connected_users.push(user);
+    }
+
+    pub fn connect_users(&mut self, mut users: Vec<PDUSession>) {
+        self.connected_users.append(&mut users);
     }
 }
 
@@ -36,9 +40,8 @@ impl Contains<User> for Ran {
 
 #[cfg(test)]
 mod tests {
+    use geo::{MultiPoint, Point};
     use std::net::{IpAddr, Ipv4Addr};
-
-    use geo::Point;
 
     use super::*;
 
@@ -51,5 +54,23 @@ mod tests {
             .collect();
         ran.connect_users(pdu_sessions.clone());
         assert_eq!(ran.connected_users, pdu_sessions);
+    }
+
+    #[test]
+    fn contains() {
+        let ran = Ran::new(Rect::new(Point::new(0.0, 0.0), Point::new(1., 1.)));
+        let mut usr = User::new(0);
+        usr.add_path(MultiPoint::new(vec![
+            Point::new(0.5, 0.5),
+            Point::new(1.1, 1.1),
+        ]));
+
+        let mut res = ran.contains(&usr);
+        assert_eq!(res, true);
+
+        usr.next_pos();
+
+        res = ran.contains(&usr);
+        assert_eq!(res, false);
     }
 }

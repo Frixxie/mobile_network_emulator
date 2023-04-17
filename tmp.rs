@@ -13,9 +13,6 @@ pub struct MobileNetworkCore {
 impl MobileNetworkCore {
     pub fn new(rans: Vec<Ran>, orphans: Vec<User>) -> Self;
     pub fn update_user_positions(&mut self);
-    pub fn get_connected_users(&self) -> Vec<&PDUSession>;
-    pub fn get_in_reach_users(&self) -> Vec<&User>;
-    pub fn get_out_of_reach_users(&self) -> Vec<&User>;
     pub fn connect_some_users(&mut self);
     pub fn get_events(&self) -> MobileNetworkCoreEvent;
 }
