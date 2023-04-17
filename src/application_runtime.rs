@@ -104,4 +104,19 @@ mod tests {
             .unwrap();
         assert_eq!(application_runtime.applications.iter().count(), 0);
     }
+
+    #[test]
+    fn use_application() {
+        let mut application_runtime = ApplicationRuntime::new();
+        let application = Application::new(Url::parse("https://fasteraune.com").unwrap());
+        application_runtime
+            .add_application(application.clone())
+            .unwrap();
+
+        assert_eq!(application_runtime.applications.iter().count(), 1);
+
+        application_runtime.use_application(&application);
+        let application_use = application_runtime.applications.iter().last().unwrap().1;
+        assert_eq!(application_use, 1);
+    }
 }
