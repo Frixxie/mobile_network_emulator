@@ -6,6 +6,10 @@ pub struct Application {
 
 impl Application {
     pub fn new(url: Url) -> Self {
-        todo!();
+        Application { url }
+    }
+
+    pub fn url(&self) -> &Url {
+        &self.url
     }
 }

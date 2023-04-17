@@ -13,15 +13,20 @@ impl EdgeDataCenter {
     pub fn new(name: String, position: Point) -> Self {
         todo!();
     }
-    pub fn add_application(application: Application) -> Url {
+
+    pub fn add_application(&mut self, application: Application) -> Url {
         todo!();
     }
 
-    pub fn delete_application(application: &Application) -> Application {
+    pub fn delete_application(&mut self, application: &Application) -> Application {
         todo!();
     }
 
-    pub fn use_application(application: &Application) -> u32 {
+    pub fn use_application(&mut self, application: &Application) -> u32 {
         todo!();
+    }
+
+    pub fn contains_application(&self, url: Url) -> bool {
+        self.application_runtime.contains_application(url)
     }
 }

@@ -1,7 +1,7 @@
 use std::net::IpAddr;
 use url::Url;
 
-use crate::user::User;
+use crate::{network::Network, user::User};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct PDUSession {
