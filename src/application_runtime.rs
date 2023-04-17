@@ -52,7 +52,7 @@ impl ApplicationRuntime {
 
     pub fn remove_application(
         &mut self,
-        application: Application,
+        application: &Application,
     ) -> Result<(), ApplicationRuntimeError> {
         for (i, current_application) in self.applications.iter_mut().enumerate() {
             if current_application.0.url() == application.url() {
@@ -75,5 +75,33 @@ impl ApplicationRuntime {
             .filter(|(application, _usages)| application.url() == url)
             .count()
             > 0
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn add_application() {
+        let mut application_runtime = ApplicationRuntime::new();
+        let application = Application::new(Url::parse("https://fasteraune.com").unwrap());
+        application_runtime.add_application(application).unwrap();
+        assert_eq!(application_runtime.applications.iter().count(), 1);
+    }
+
+    #[test]
+    fn remove_application() {
+        let mut application_runtime = ApplicationRuntime::new();
+        let application = Application::new(Url::parse("https://fasteraune.com").unwrap());
+        application_runtime
+            .add_application(application.clone())
+            .unwrap();
+        assert_eq!(application_runtime.applications.iter().count(), 1);
+
+        application_runtime
+            .remove_application(&application)
+            .unwrap();
+        assert_eq!(application_runtime.applications.iter().count(), 0);
     }
 }

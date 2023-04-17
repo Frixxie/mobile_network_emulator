@@ -1,5 +1,6 @@
 use url::Url;
 
+#[derive(Debug, Clone)]
 pub struct Application {
     url: Url,
 }
