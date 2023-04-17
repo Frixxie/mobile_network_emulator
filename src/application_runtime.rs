@@ -1,8 +1,13 @@
+use std::{
+    error::Error,
+    fmt::{Display, Formatter},
+};
+
 use url::Url;
 
 use crate::application::Application;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug)]
 pub struct ApplicationRuntimeError {
     message: String,
 }
@@ -27,20 +32,21 @@ pub struct ApplicationRuntime {
 
 impl ApplicationRuntime {
     pub fn new() -> Self {
-        todo!();
+        ApplicationRuntime {
+            applications: Vec::new(),
+        }
     }
 
     pub fn add_application(
         &mut self,
         application: Application,
     ) -> Result<(), ApplicationRuntimeError> {
-        if self.applications.contains(&application) {
+        if self.contains_application(application.url()) {
             return Err(ApplicationRuntimeError::new(format!(
-                "Application {} already exists",
-                application.get_name()
+                "Application already exists",
             )));
         }
-        self.applications.push(application);
+        self.applications.push((application, 0));
         Ok(())
     }
 
@@ -49,14 +55,13 @@ impl ApplicationRuntime {
         application: Application,
     ) -> Result<(), ApplicationRuntimeError> {
         for (i, current_application) in self.applications.iter_mut().enumerate() {
-            if *current_application == application {
+            if current_application.0.url() == application.url() {
                 self.applications.remove(i);
                 return Ok(());
             }
         }
         Err(ApplicationRuntimeError::new(format!(
-            "Application {} does not exist",
-            application.get_name()
+            "Application does not exist",
         )))
     }
 
@@ -64,10 +69,10 @@ impl ApplicationRuntime {
         todo!();
     }
 
-    pub fn contains_application(&mut self, url: Url) -> bool {
+    pub fn contains_application(&self, url: &Url) -> bool {
         self.applications
             .iter()
-            .filter(|(application, usages)| application.url() == url)
+            .filter(|(application, _usages)| application.url() == url)
             .count()
             > 0
     }

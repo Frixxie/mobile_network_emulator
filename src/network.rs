@@ -34,7 +34,7 @@ impl Network {
         Network { edge_data_centers }
     }
 
-    pub fn use_application(&mut self, url: Url) -> Result<(), NetworkError> {
+    pub fn use_application(&mut self, url: &Url) -> Result<(), NetworkError> {
         todo!();
     }
 }

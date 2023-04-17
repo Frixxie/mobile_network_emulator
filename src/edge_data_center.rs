@@ -26,7 +26,7 @@ impl EdgeDataCenter {
         todo!();
     }
 
-    pub fn contains_application(&self, url: Url) -> bool {
+    pub fn contains_application(&self, url: &Url) -> bool {
         self.application_runtime.contains_application(url)
     }
 }
