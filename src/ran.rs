@@ -57,9 +57,18 @@ mod tests {
     }
 
     #[test]
+    #[should_panic]
+    fn contains_should_panic() {
+        let ran = Ran::new(Rect::new(Point::new(0.0, 0.0), Point::new(1., 1.)));
+        let usr = User::new(0);
+        ran.contains(&usr);
+    }
+
+    #[test]
     fn contains() {
         let ran = Ran::new(Rect::new(Point::new(0.0, 0.0), Point::new(1., 1.)));
         let mut usr = User::new(0);
+
         usr.add_path(MultiPoint::new(vec![
             Point::new(0.5, 0.5),
             Point::new(1.1, 1.1),
