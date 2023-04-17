@@ -18,7 +18,7 @@ impl PDUSession {
         return (self.user, self.ip_address);
     }
 
-    pub fn use_application(&self, url: Url) {
+    pub fn use_application(&self, url: Url, network: Network) {
         todo!();
     }
 }
