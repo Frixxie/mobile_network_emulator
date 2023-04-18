@@ -18,6 +18,14 @@ impl PDUSession {
         return (self.user, self.ip_address);
     }
 
+    pub fn user(&self) -> &User {
+        &self.user
+    }
+
+    pub fn ip(&self) -> &IpAddr {
+        &self.ip_address
+    }
+
     pub fn use_application(&self, url: Url, network: Network) {
         todo!();
     }

@@ -3,6 +3,13 @@ pub enum EventType {
     PDU_CONNECTION_EVENT,
 }
 
+// pub struct MonitoringEventReport {
+//     imeiChange: Option<AssosiationType>
+//     externalId: Option<Vec<ExternalId>
+//     ideStatusInfo: Option<IdelStatusInfo>
+
+// }
+
 pub struct MobileNetworkCoreEvent {
     kind: EventType,
     description: String,

@@ -19,6 +19,13 @@ impl Ran {
         self.connected_users.drain(..).collect()
     }
 
+    pub fn get_current_connected_users(&self) -> Vec<&User> {
+        self.connected_users
+            .iter()
+            .map(|pdu_session| pdu_session.user())
+            .collect()
+    }
+
     pub fn connect_user(&mut self, user: PDUSession) {
         self.connected_users.push(user);
     }
@@ -46,6 +53,9 @@ mod tests {
     use super::*;
 
     #[test]
+    fn create() {}
+
+    #[test]
     fn connect_users() {
         let mut ran = Ran::new(Rect::new(Point::new(0.0, 0.0), Point::new(1., 1.)));
         let pdu_sessions: Vec<PDUSession> = (0..32)
@@ -53,6 +63,20 @@ mod tests {
             .map(|i| PDUSession::new(User::new(i), IpAddr::V4(Ipv4Addr::LOCALHOST)))
             .collect();
         ran.connect_users(pdu_sessions.clone());
+        assert_eq!(ran.connected_users, pdu_sessions);
+    }
+
+    #[test]
+    fn connect_user() {
+        let mut ran = Ran::new(Rect::new(Point::new(0.0, 0.0), Point::new(1., 1.)));
+        let pdu_sessions: Vec<PDUSession> = (0..32)
+            .into_iter()
+            .map(|i| PDUSession::new(User::new(i), IpAddr::V4(Ipv4Addr::LOCALHOST)))
+            .collect();
+        pdu_sessions
+            .clone()
+            .into_iter()
+            .for_each(|pdu_session| ran.connect_user(pdu_session));
         assert_eq!(ran.connected_users, pdu_sessions);
     }
 
@@ -81,5 +105,29 @@ mod tests {
 
         res = ran.contains(&usr);
         assert_eq!(res, false);
+    }
+
+    #[test]
+    fn get_connected_users() {
+        let mut ran = Ran::new(Rect::new(Point::new(0.0, 0.0), Point::new(1., 1.)));
+        let pdu_sessions: Vec<PDUSession> = (0..32)
+            .into_iter()
+            .map(|i| PDUSession::new(User::new(i), IpAddr::V4(Ipv4Addr::LOCALHOST)))
+            .collect();
+        ran.connect_users(pdu_sessions.clone());
+        let all_pdu_sessions = ran.get_connected_users();
+        assert_eq!(all_pdu_sessions, pdu_sessions);
+    }
+
+    #[test]
+    fn get_current_connected_users() {
+        let mut ran = Ran::new(Rect::new(Point::new(0.0, 0.0), Point::new(1., 1.)));
+        let pdu_sessions: Vec<PDUSession> = (0..32)
+            .into_iter()
+            .map(|i| PDUSession::new(User::new(i), IpAddr::V4(Ipv4Addr::LOCALHOST)))
+            .collect();
+        ran.connect_users(pdu_sessions.clone());
+        let all_pdu_sessions = ran.get_current_connected_users();
+        assert_eq!(all_pdu_sessions.iter().count(), 32);
     }
 }

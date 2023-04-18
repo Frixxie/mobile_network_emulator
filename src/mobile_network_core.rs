@@ -1,12 +1,5 @@
 use std::net::IpAddr;
 
-// pub struct MonitoringEventReport {
-//     imeiChange: Option<AssosiationType>
-//     externalId: Option<Vec<ExternalId>
-//     ideStatusInfo: Option<IdelStatusInfo>
-
-// }
-
 use geo::Contains;
 
 use crate::{
@@ -71,10 +64,25 @@ impl MobileNetworkCore {
         }
         self.orphans = tmp_orphans;
     }
+
+    pub fn get_connected_users(&self) -> Vec<&User> {
+        self.rans
+            .iter()
+            .flat_map(|ran| ran.get_current_connected_users())
+            .collect()
+    }
+
+    pub fn get_all_users(&self) -> Vec<&User> {
+        self.get_connected_users()
+            .into_iter()
+            .chain(self.orphans.iter())
+            .collect()
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use std::iter::repeat;
     use std::net::Ipv4Addr;
 
     use geo::{MultiPoint, Point, Rect};
@@ -104,20 +112,111 @@ mod tests {
     fn update_user_posititons() {
         //setup
         let ran = Ran::new(Rect::new(Point::new(0.0, 0.0), Point::new(1., 1.)));
-        let mut usr = User::new(0);
-        usr.add_path(MultiPoint::new(vec![
-            Point::new(0.5, 0.5),
-            Point::new(1.1, 1.1),
-        ]));
-        let ip_addesses = vec![IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1))];
-        let mut mn = MobileNetworkCore::new(vec![ran], vec![usr], ip_addesses);
+        let mut users: Vec<User> = (0..20).into_iter().map(|i| User::new(i)).collect();
+        for user in users.iter_mut().take(10) {
+            user.add_path(MultiPoint::new(vec![
+                Point::new(0.5, 0.5),
+                Point::new(0.9, 0.9),
+            ]));
+        }
+        for user in users.iter_mut().skip(10) {
+            user.add_path(MultiPoint::new(vec![
+                Point::new(0.5, 0.5),
+                Point::new(1.1, 1.1),
+            ]));
+        }
+
+        let ip_addresses: Vec<IpAddr> = repeat(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)))
+            .take(20)
+            .collect();
+        let mut mn = MobileNetworkCore::new(vec![ran], users, ip_addresses);
 
         //execute and verify
         mn.try_connect_orphans();
         assert_eq!(mn.orphans.iter().count(), 0);
         mn.update_user_positions();
-        assert_eq!(mn.orphans.iter().count(), 1);
+        assert_eq!(mn.orphans.iter().count(), 20);
         mn.try_connect_orphans();
-        assert_eq!(mn.orphans.iter().count(), 1);
+        assert_eq!(mn.orphans.iter().count(), 10);
+    }
+
+    #[test]
+    fn get_all_users() {
+        //setup
+        let ran = Ran::new(Rect::new(Point::new(0.0, 0.0), Point::new(1., 1.)));
+        let mut users: Vec<User> = (0..20).into_iter().map(|i| User::new(i)).collect();
+        for user in users.iter_mut().take(10) {
+            user.add_path(MultiPoint::new(vec![
+                Point::new(0.5, 0.5),
+                Point::new(0.9, 0.9),
+            ]));
+        }
+        for user in users.iter_mut().skip(10) {
+            user.add_path(MultiPoint::new(vec![
+                Point::new(0.5, 0.5),
+                Point::new(1.1, 1.1),
+            ]));
+        }
+
+        let ip_addresses: Vec<IpAddr> = repeat(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)))
+            .take(20)
+            .collect();
+        let mut mn = MobileNetworkCore::new(vec![ran], users, ip_addresses);
+
+        //execute and verify
+        mn.try_connect_orphans();
+        assert_eq!(mn.orphans.iter().count(), 0);
+        let all_users = mn.get_all_users();
+        assert_eq!(all_users.iter().count(), 20);
+
+        mn.update_user_positions();
+        assert_eq!(mn.orphans.iter().count(), 20);
+        let all_users = mn.get_all_users();
+        assert_eq!(all_users.iter().count(), 20);
+
+        mn.try_connect_orphans();
+        assert_eq!(mn.orphans.iter().count(), 10);
+        let all_users = mn.get_all_users();
+        assert_eq!(all_users.iter().count(), 20);
+    }
+
+    #[test]
+    fn get_connected_users() {
+        //setup
+        let ran = Ran::new(Rect::new(Point::new(0.0, 0.0), Point::new(1., 1.)));
+        let mut users: Vec<User> = (0..20).into_iter().map(|i| User::new(i)).collect();
+        for user in users.iter_mut().take(10) {
+            user.add_path(MultiPoint::new(vec![
+                Point::new(0.5, 0.5),
+                Point::new(0.9, 0.9),
+            ]));
+        }
+        for user in users.iter_mut().skip(10) {
+            user.add_path(MultiPoint::new(vec![
+                Point::new(0.5, 0.5),
+                Point::new(1.1, 1.1),
+            ]));
+        }
+
+        let ip_addresses: Vec<IpAddr> = repeat(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)))
+            .take(20)
+            .collect();
+        let mut mn = MobileNetworkCore::new(vec![ran], users, ip_addresses);
+
+        //execute and verify
+        mn.try_connect_orphans();
+        assert_eq!(mn.orphans.iter().count(), 0);
+        let connected_users = mn.get_connected_users();
+        assert_eq!(connected_users.iter().count(), 20);
+
+        mn.update_user_positions();
+        assert_eq!(mn.orphans.iter().count(), 20);
+        let connected_users = mn.get_connected_users();
+        assert_eq!(connected_users.iter().count(), 0);
+
+        mn.try_connect_orphans();
+        assert_eq!(mn.orphans.iter().count(), 10);
+        let connected_users = mn.get_connected_users();
+        assert_eq!(connected_users.iter().count(), 10);
     }
 }
