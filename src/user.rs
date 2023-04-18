@@ -39,7 +39,7 @@ impl User {
         }
     }
 
-    pub fn generate_user_trail(bounds: (f64, f64), start_pos: Point, length: usize) -> MultiPoint {
+    pub fn generate_user_path(bounds: (f64, f64), start_pos: Point, length: usize) -> MultiPoint {
         let mut rng = rand::thread_rng();
         let mut res = Vec::new();
         res.push(start_pos);
@@ -60,15 +60,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn path() {
+    fn add_path_current_pos_next_pos() {
         let mut user = User::new(0);
         let path = MultiPoint(vec![Point::new(0.0, 0.1), Point::new(1., 1.)]);
-
-        let current_pos = user.current_pos();
-        assert_eq!(current_pos, None);
-
-        let next_pos = user.next_pos();
-        assert_eq!(next_pos, None);
 
         user.add_path(path);
 
@@ -87,8 +81,19 @@ mod tests {
     }
 
     #[test]
-    fn generate_trail() {
-        let trail = User::generate_user_trail((100., 100.), (50., 50.).into(), 1 << 7);
-        assert_eq!(trail.iter().count(), 1 << 7);
+    fn current_pos_next_pos_should_fail() {
+        let mut user = User::new(0);
+
+        let current_pos = user.current_pos();
+        assert_eq!(current_pos, None);
+
+        let next_pos = user.next_pos();
+        assert_eq!(next_pos, None);
+    }
+
+    #[test]
+    fn generate_path() {
+        let path = User::generate_user_path((100., 100.), (50., 50.).into(), 1 << 7);
+        assert_eq!(path.iter().count(), 1 << 7);
     }
 }
