@@ -32,7 +32,7 @@ impl User {
         match &self.path {
             Some(path) => {
                 self.posititon += 1;
-                self.posititon = self.posititon % path.iter().count();
+                self.posititon %= path.iter().count();
                 Some(self.posititon)
             }
             None => None,

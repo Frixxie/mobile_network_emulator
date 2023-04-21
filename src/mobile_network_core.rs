@@ -31,8 +31,7 @@ impl MobileNetworkCore {
         self.orphans = self
             .rans
             .iter_mut()
-            .map(|ran| ran.get_connected_users())
-            .flatten()
+            .flat_map(|ran| ran.get_connected_users())
             .map(|pdu_session| {
                 let (user, ip_address) = pdu_session.release();
                 self.available_ip_addresses.push(ip_address);
@@ -105,14 +104,14 @@ mod tests {
         mn.try_connect_orphans();
 
         //verify
-        assert_eq!(mn.orphans.iter().count(), 0);
+        assert_eq!(mn.orphans.len(), 0);
     }
 
     #[test]
     fn update_user_posititons() {
         //setup
         let ran = Ran::new(Rect::new(Point::new(0.0, 0.0), Point::new(1., 1.)));
-        let mut users: Vec<User> = (0..20).into_iter().map(|i| User::new(i)).collect();
+        let mut users: Vec<User> = (0..20).map(User::new).collect();
         for user in users.iter_mut().take(10) {
             user.add_path(MultiPoint::new(vec![
                 Point::new(0.5, 0.5),
@@ -133,18 +132,18 @@ mod tests {
 
         //execute and verify
         mn.try_connect_orphans();
-        assert_eq!(mn.orphans.iter().count(), 0);
+        assert_eq!(mn.orphans.len(), 0);
         mn.update_user_positions();
-        assert_eq!(mn.orphans.iter().count(), 20);
+        assert_eq!(mn.orphans.len(), 20);
         mn.try_connect_orphans();
-        assert_eq!(mn.orphans.iter().count(), 10);
+        assert_eq!(mn.orphans.len(), 10);
     }
 
     #[test]
     fn get_all_users() {
         //setup
         let ran = Ran::new(Rect::new(Point::new(0.0, 0.0), Point::new(1., 1.)));
-        let mut users: Vec<User> = (0..20).into_iter().map(|i| User::new(i)).collect();
+        let mut users: Vec<User> = (0..20).map(User::new).collect();
         for user in users.iter_mut().take(10) {
             user.add_path(MultiPoint::new(vec![
                 Point::new(0.5, 0.5),
@@ -165,26 +164,26 @@ mod tests {
 
         //execute and verify
         mn.try_connect_orphans();
-        assert_eq!(mn.orphans.iter().count(), 0);
+        assert_eq!(mn.orphans.len(), 0);
         let all_users = mn.get_all_users();
-        assert_eq!(all_users.iter().count(), 20);
+        assert_eq!(all_users.len(), 20);
 
         mn.update_user_positions();
-        assert_eq!(mn.orphans.iter().count(), 20);
+        assert_eq!(mn.orphans.len(), 20);
         let all_users = mn.get_all_users();
-        assert_eq!(all_users.iter().count(), 20);
+        assert_eq!(all_users.len(), 20);
 
         mn.try_connect_orphans();
-        assert_eq!(mn.orphans.iter().count(), 10);
+        assert_eq!(mn.orphans.len(), 10);
         let all_users = mn.get_all_users();
-        assert_eq!(all_users.iter().count(), 20);
+        assert_eq!(all_users.len(), 20);
     }
 
     #[test]
     fn get_connected_users() {
         //setup
         let ran = Ran::new(Rect::new(Point::new(0.0, 0.0), Point::new(1., 1.)));
-        let mut users: Vec<User> = (0..20).into_iter().map(|i| User::new(i)).collect();
+        let mut users: Vec<User> = (0..20).map(User::new).collect();
         for user in users.iter_mut().take(10) {
             user.add_path(MultiPoint::new(vec![
                 Point::new(0.5, 0.5),
@@ -205,18 +204,18 @@ mod tests {
 
         //execute and verify
         mn.try_connect_orphans();
-        assert_eq!(mn.orphans.iter().count(), 0);
+        assert_eq!(mn.orphans.len(), 0);
         let connected_users = mn.get_connected_users();
-        assert_eq!(connected_users.iter().count(), 20);
+        assert_eq!(connected_users.len(), 20);
 
         mn.update_user_positions();
-        assert_eq!(mn.orphans.iter().count(), 20);
+        assert_eq!(mn.orphans.len(), 20);
         let connected_users = mn.get_connected_users();
-        assert_eq!(connected_users.iter().count(), 0);
+        assert_eq!(connected_users.len(), 0);
 
         mn.try_connect_orphans();
-        assert_eq!(mn.orphans.iter().count(), 10);
+        assert_eq!(mn.orphans.len(), 10);
         let connected_users = mn.get_connected_users();
-        assert_eq!(connected_users.iter().count(), 10);
+        assert_eq!(connected_users.len(), 10);
     }
 }

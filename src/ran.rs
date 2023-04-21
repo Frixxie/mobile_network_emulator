@@ -59,7 +59,6 @@ mod tests {
     fn connect_users() {
         let mut ran = Ran::new(Rect::new(Point::new(0.0, 0.0), Point::new(1., 1.)));
         let pdu_sessions: Vec<PDUSession> = (0..32)
-            .into_iter()
             .map(|i| PDUSession::new(User::new(i), IpAddr::V4(Ipv4Addr::LOCALHOST)))
             .collect();
         ran.connect_users(pdu_sessions.clone());
@@ -70,7 +69,6 @@ mod tests {
     fn connect_user() {
         let mut ran = Ran::new(Rect::new(Point::new(0.0, 0.0), Point::new(1., 1.)));
         let pdu_sessions: Vec<PDUSession> = (0..32)
-            .into_iter()
             .map(|i| PDUSession::new(User::new(i), IpAddr::V4(Ipv4Addr::LOCALHOST)))
             .collect();
         pdu_sessions
@@ -99,19 +97,18 @@ mod tests {
         ]));
 
         let mut res = ran.contains(&usr);
-        assert_eq!(res, true);
+        assert!(res);
 
         usr.next_pos();
 
         res = ran.contains(&usr);
-        assert_eq!(res, false);
+        assert!(!res);
     }
 
     #[test]
     fn get_connected_users() {
         let mut ran = Ran::new(Rect::new(Point::new(0.0, 0.0), Point::new(1., 1.)));
         let pdu_sessions: Vec<PDUSession> = (0..32)
-            .into_iter()
             .map(|i| PDUSession::new(User::new(i), IpAddr::V4(Ipv4Addr::LOCALHOST)))
             .collect();
         ran.connect_users(pdu_sessions.clone());
@@ -123,11 +120,10 @@ mod tests {
     fn get_current_connected_users() {
         let mut ran = Ran::new(Rect::new(Point::new(0.0, 0.0), Point::new(1., 1.)));
         let pdu_sessions: Vec<PDUSession> = (0..32)
-            .into_iter()
             .map(|i| PDUSession::new(User::new(i), IpAddr::V4(Ipv4Addr::LOCALHOST)))
             .collect();
-        ran.connect_users(pdu_sessions.clone());
+        ran.connect_users(pdu_sessions);
         let all_pdu_sessions = ran.get_current_connected_users();
-        assert_eq!(all_pdu_sessions.iter().count(), 32);
+        assert_eq!(all_pdu_sessions.len(), 32);
     }
 }

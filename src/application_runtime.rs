@@ -42,9 +42,7 @@ impl ApplicationRuntime {
         application: Application,
     ) -> Result<(), ApplicationRuntimeError> {
         if self.contains_application(application.url()) {
-            return Err(ApplicationRuntimeError::new(format!(
-                "Application already exists",
-            )));
+            return Err(ApplicationRuntimeError::new("Application already exists".to_string()));
         }
         self.applications.push((application, 0));
         Ok(())
@@ -60,9 +58,7 @@ impl ApplicationRuntime {
                 return Ok(());
             }
         }
-        Err(ApplicationRuntimeError::new(format!(
-            "Application does not exist",
-        )))
+        Err(ApplicationRuntimeError::new("Application does not exist".to_string()))
     }
 
     pub fn use_application(
@@ -75,9 +71,7 @@ impl ApplicationRuntime {
                 return Ok(current_application.1);
             }
         }
-        Err(ApplicationRuntimeError::new(format!(
-            "Application does not exist",
-        )))
+        Err(ApplicationRuntimeError::new("Application does not exist".to_string()))
     }
 
     pub fn contains_application(&self, url: &Url) -> bool {
@@ -89,7 +83,7 @@ impl ApplicationRuntime {
     }
 
     pub fn num_applications(&self) -> usize {
-        self.applications.iter().count()
+        self.applications.len()
     }
 }
 
@@ -102,7 +96,7 @@ mod tests {
         let mut application_runtime = ApplicationRuntime::new();
         let application = Application::new(Url::parse("https://fasteraune.com").unwrap(), 0);
         application_runtime.add_application(application).unwrap();
-        assert_eq!(application_runtime.applications.iter().count(), 1);
+        assert_eq!(application_runtime.applications.len(), 1);
     }
 
     #[test]
@@ -110,12 +104,12 @@ mod tests {
         let mut application_runtime = ApplicationRuntime::new();
         let application = Application::new(Url::parse("https://fasteraune.com").unwrap(), 0);
         application_runtime.add_application(application).unwrap();
-        assert_eq!(application_runtime.applications.iter().count(), 1);
+        assert_eq!(application_runtime.applications.len(), 1);
 
         let application = Application::new(Url::parse("https://fasteraune.com").unwrap(), 0);
         let res = application_runtime.add_application(application);
-        assert_eq!(res.is_err(), true);
-        assert_eq!(application_runtime.applications.iter().count(), 1);
+        assert!(res.is_err());
+        assert_eq!(application_runtime.applications.len(), 1);
     }
 
     #[test]
@@ -125,11 +119,11 @@ mod tests {
         application_runtime
             .add_application(application.clone())
             .unwrap();
-        assert_eq!(application_runtime.applications.iter().count(), 1);
+        assert_eq!(application_runtime.applications.len(), 1);
 
         let res = application_runtime.remove_application(&application);
-        assert_eq!(res.is_ok(), true);
-        assert_eq!(application_runtime.applications.iter().count(), 0);
+        assert!(res.is_ok());
+        assert_eq!(application_runtime.applications.len(), 0);
     }
 
     #[test]
@@ -139,14 +133,14 @@ mod tests {
         application_runtime
             .add_application(application.clone())
             .unwrap();
-        assert_eq!(application_runtime.applications.iter().count(), 1);
+        assert_eq!(application_runtime.applications.len(), 1);
 
         application_runtime
             .remove_application(&application)
             .unwrap();
-        assert_eq!(application_runtime.applications.iter().count(), 0);
+        assert_eq!(application_runtime.applications.len(), 0);
         let res = application_runtime.remove_application(&application);
-        assert_eq!(res.is_err(), true);
+        assert!(res.is_err());
     }
 
     #[test]
@@ -157,7 +151,7 @@ mod tests {
             .add_application(application.clone())
             .unwrap();
 
-        assert_eq!(application_runtime.applications.iter().count(), 1);
+        assert_eq!(application_runtime.applications.len(), 1);
 
         application_runtime.use_application(&application).unwrap();
         let application_use = application_runtime.applications.iter().last().unwrap().1;
@@ -170,7 +164,7 @@ mod tests {
         let application = Application::new(Url::parse("https://fasteraune.com").unwrap(), 0);
 
         let res = application_runtime.use_application(&application);
-        assert_eq!(res.is_err(), true);
+        assert!(res.is_err());
     }
 
     #[test]
@@ -178,14 +172,14 @@ mod tests {
         let mut application_runtime = ApplicationRuntime::new();
         let application = Application::new(Url::parse("https://fasteraune.com").unwrap(), 0);
 
-        assert_eq!(application_runtime.applications.iter().count(), 0);
+        assert_eq!(application_runtime.applications.len(), 0);
         assert_eq!(application_runtime.num_applications(), 0);
 
         application_runtime
-            .add_application(application.clone())
+            .add_application(application)
             .unwrap();
 
-        assert_eq!(application_runtime.applications.iter().count(), 1);
+        assert_eq!(application_runtime.applications.len(), 1);
         assert_eq!(application_runtime.num_applications(), 1);
     }
 }

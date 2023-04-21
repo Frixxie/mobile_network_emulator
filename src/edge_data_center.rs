@@ -100,7 +100,7 @@ mod tests {
         let mut eds = EdgeDataCenter::new("Fredrik's EdgeDataCenter", Point::new(0., 0.));
         let application = Application::new(Url::parse("http://fasteraune.com").unwrap(), 0);
         let res = eds.add_application(&application);
-        assert_eq!(res.is_ok(), true);
+        assert!(res.is_ok());
         assert_eq!(eds.application_runtime.num_applications(), 1);
     }
 
@@ -109,10 +109,10 @@ mod tests {
         let mut eds = EdgeDataCenter::new("Fredrik's EdgeDataCenter", Point::new(0., 0.));
         let application = Application::new(Url::parse("http://fasteraune.com").unwrap(), 0);
         let mut res = eds.add_application(&application);
-        assert_eq!(res.is_ok(), true);
+        assert!(res.is_ok());
         assert_eq!(eds.application_runtime.num_applications(), 1);
         res = eds.add_application(&application);
-        assert_eq!(res.is_err(), true);
+        assert!(res.is_err());
     }
 
     #[test]
@@ -120,11 +120,11 @@ mod tests {
         let mut eds = EdgeDataCenter::new("Fredrik's EdgeDataCenter", Point::new(0., 0.));
         let application = Application::new(Url::parse("http://fasteraune.com").unwrap(), 0);
         let res = eds.add_application(&application);
-        assert_eq!(res.is_ok(), true);
+        assert!(res.is_ok());
         assert_eq!(eds.application_runtime.num_applications(), 1);
 
         let res = eds.remove_application(&application);
-        assert_eq!(res.is_ok(), true);
+        assert!(res.is_ok());
         assert_eq!(eds.application_runtime.num_applications(), 0);
     }
 
@@ -133,15 +133,15 @@ mod tests {
         let mut eds = EdgeDataCenter::new("Fredrik's EdgeDataCenter", Point::new(0., 0.));
         let application = Application::new(Url::parse("http://fasteraune.com").unwrap(), 0);
         let res = eds.add_application(&application);
-        assert_eq!(res.is_ok(), true);
+        assert!(res.is_ok());
         assert_eq!(eds.application_runtime.num_applications(), 1);
 
         let res = eds.remove_application(&application);
-        assert_eq!(res.is_ok(), true);
+        assert!(res.is_ok());
         assert_eq!(eds.application_runtime.num_applications(), 0);
 
         let res = eds.remove_application(&application);
-        assert_eq!(res.is_err(), true);
+        assert!(res.is_err());
         assert_eq!(eds.application_runtime.num_applications(), 0);
     }
 
@@ -151,11 +151,11 @@ mod tests {
         let application = Application::new(Url::parse("http://fasteraune.com").unwrap(), 0);
         let res = eds.add_application(&application);
 
-        assert_eq!(res.is_ok(), true);
+        assert!(res.is_ok());
         assert_eq!(eds.application_runtime.num_applications(), 1);
 
         let res = eds.use_application(&application);
-        assert_eq!(res.is_ok(), true);
+        assert!(res.is_ok());
         assert_eq!(res.unwrap(), 1);
     }
 
@@ -165,7 +165,7 @@ mod tests {
         let application = Application::new(Url::parse("http://fasteraune.com").unwrap(), 0);
 
         let res = eds.use_application(&application);
-        assert_eq!(res.is_err(), true);
+        assert!(res.is_err());
     }
 
     #[test]
@@ -174,11 +174,11 @@ mod tests {
         let application = Application::new(Url::parse("http://fasteraune.com").unwrap(), 0);
         let res = eds.add_application(&application);
 
-        assert_eq!(res.is_ok(), true);
+        assert!(res.is_ok());
         assert_eq!(eds.application_runtime.num_applications(), 1);
 
         let res = eds.contains_application(&Url::parse("http://fasteraune.com").unwrap());
-        assert_eq!(res, true);
+        assert!(res);
     }
 
     #[test]
@@ -186,6 +186,6 @@ mod tests {
         let eds = EdgeDataCenter::new("Fredrik's EdgeDataCenter", Point::new(0., 0.));
 
         let res = eds.contains_application(&Url::parse("http://fasteraune.com").unwrap());
-        assert_eq!(res, false);
+        assert!(!res);
     }
 }

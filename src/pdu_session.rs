@@ -15,7 +15,7 @@ impl PDUSession {
     }
 
     pub fn release(self) -> (User, IpAddr) {
-        return (self.user, self.ip_address);
+        (self.user, self.ip_address)
     }
 
     pub fn user(&self) -> &User {
@@ -26,7 +26,7 @@ impl PDUSession {
         &self.ip_address
     }
 
-    pub fn use_application(&self, url: Url, network: Network) {
+    pub fn use_application(&self, _url: Url, _network: Network) {
         todo!();
     }
 }

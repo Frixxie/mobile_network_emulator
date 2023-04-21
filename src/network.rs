@@ -17,7 +17,7 @@ impl NetworkError {
 
 impl Display for NetworkError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&format!("Error: {}", self.message).to_owned())
+        f.write_str(&format!("Error: {}", self.message))
     }
 }
 
@@ -73,7 +73,7 @@ mod tests {
 
         let network = Network::new(edge_data_centers);
 
-        assert_eq!(network.edge_data_centers.iter().count(), 32);
+        assert_eq!(network.edge_data_centers.len(), 32);
     }
 
     #[test]
@@ -95,7 +95,7 @@ mod tests {
 
         let result = network.use_application(&application);
 
-        assert_eq!(result.is_ok(), true);
+        assert!(result.is_ok());
     }
 
     #[test]
@@ -114,6 +114,6 @@ mod tests {
 
         let result = network.use_application(&application);
 
-        assert_eq!(result.is_ok(), false);
+        assert!(result.is_err());
     }
 }
