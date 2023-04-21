@@ -1,16 +1,20 @@
-use geo::{Contains, Rect};
+use geo::Contains;
+use geo::EuclideanDistance;
+use geo::Point;
 
 use crate::{pdu_session::PDUSession, user::User};
 
 pub struct Ran {
-    cell: Rect,
+    position: Point,
+    radius: f64,
     connected_users: Vec<PDUSession>,
 }
 
 impl Ran {
-    pub fn new(cell: Rect) -> Self {
+    pub fn new(position: Point, radius: f64) -> Self {
         Ran {
-            cell,
+            position,
+            radius,
             connected_users: Vec::new(),
         }
     }
@@ -41,7 +45,7 @@ impl Contains<User> for Ran {
             Some(pos) => pos,
             None => panic!("User should have position before calling this function"),
         };
-        self.cell.contains(&user_pos)
+        self.position.euclidean_distance(&user_pos).abs() <= self.radius
     }
 }
 
@@ -57,7 +61,8 @@ mod tests {
 
     #[test]
     fn connect_users() {
-        let mut ran = Ran::new(Rect::new(Point::new(0.0, 0.0), Point::new(1., 1.)));
+        let position = Point::new(0.5, 0.5);
+        let mut ran = Ran::new(position, 0.5);
         let pdu_sessions: Vec<PDUSession> = (0..32)
             .map(|i| PDUSession::new(User::new(i), IpAddr::V4(Ipv4Addr::LOCALHOST)))
             .collect();
@@ -67,7 +72,8 @@ mod tests {
 
     #[test]
     fn connect_user() {
-        let mut ran = Ran::new(Rect::new(Point::new(0.0, 0.0), Point::new(1., 1.)));
+        let position = Point::new(0.5, 0.5);
+        let mut ran = Ran::new(position, 0.5);
         let pdu_sessions: Vec<PDUSession> = (0..32)
             .map(|i| PDUSession::new(User::new(i), IpAddr::V4(Ipv4Addr::LOCALHOST)))
             .collect();
@@ -81,14 +87,16 @@ mod tests {
     #[test]
     #[should_panic]
     fn contains_should_panic() {
-        let ran = Ran::new(Rect::new(Point::new(0.0, 0.0), Point::new(1., 1.)));
+        let position = Point::new(0.5, 0.5);
+        let ran = Ran::new(position, 0.5);
         let usr = User::new(0);
         ran.contains(&usr);
     }
 
     #[test]
     fn contains() {
-        let ran = Ran::new(Rect::new(Point::new(0.0, 0.0), Point::new(1., 1.)));
+        let position = Point::new(0.5, 0.5);
+        let ran = Ran::new(position, 0.5);
         let mut usr = User::new(0);
 
         usr.add_path(MultiPoint::new(vec![
@@ -107,7 +115,8 @@ mod tests {
 
     #[test]
     fn get_connected_users() {
-        let mut ran = Ran::new(Rect::new(Point::new(0.0, 0.0), Point::new(1., 1.)));
+        let position = Point::new(0.5, 0.5);
+        let mut ran = Ran::new(position, 0.5);
         let pdu_sessions: Vec<PDUSession> = (0..32)
             .map(|i| PDUSession::new(User::new(i), IpAddr::V4(Ipv4Addr::LOCALHOST)))
             .collect();
@@ -118,7 +127,8 @@ mod tests {
 
     #[test]
     fn get_current_connected_users() {
-        let mut ran = Ran::new(Rect::new(Point::new(0.0, 0.0), Point::new(1., 1.)));
+        let position = Point::new(0.5, 0.5);
+        let mut ran = Ran::new(position, 0.5);
         let pdu_sessions: Vec<PDUSession> = (0..32)
             .map(|i| PDUSession::new(User::new(i), IpAddr::V4(Ipv4Addr::LOCALHOST)))
             .collect();

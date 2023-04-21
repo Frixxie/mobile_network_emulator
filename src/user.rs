@@ -1,3 +1,5 @@
+use std::ops::Range;
+
 use geo::{MultiPoint, Point};
 use rand::Rng;
 
@@ -39,15 +41,15 @@ impl User {
         }
     }
 
-    pub fn generate_user_path(bounds: (f64, f64), start_pos: Point, length: usize) -> MultiPoint {
+    pub fn generate_user_path(bounds: &Range<f64>, start_pos: Point, length: usize) -> MultiPoint {
         let mut rng = rand::thread_rng();
         let mut res = Vec::new();
         res.push(start_pos);
         for i in 0..length - 1 {
             let diff = (rng.gen_range(-1.0..1.), rng.gen_range(-1.0..1.));
             let point = Point::new(
-                (res[i].x() + diff.0) % bounds.0,
-                (res[i].y() + diff.1) % bounds.1,
+                (res[i].x() + diff.0) % bounds.start,
+                (res[i].y() + diff.1) % bounds.end,
             );
             res.push(point)
         }
@@ -93,7 +95,7 @@ mod tests {
 
     #[test]
     fn generate_path() {
-        let path = User::generate_user_path((100., 100.), (50., 50.).into(), 1 << 7);
+        let path = User::generate_user_path(&(100.0..100.), (50., 50.).into(), 1 << 7);
         assert_eq!(path.iter().count(), 1 << 7);
     }
 }

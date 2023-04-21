@@ -91,7 +91,8 @@ mod tests {
     #[test]
     fn try_connect_orphans() {
         //setup
-        let ran = Ran::new(Rect::new(Point::new(0.0, 0.0), Point::new(1., 1.)));
+        let position = Point::new(0.5, 0.5);
+        let mut ran = Ran::new(position, 0.5);
         let mut usr = User::new(0);
         usr.add_path(MultiPoint::new(vec![
             Point::new(0.5, 0.5),
@@ -110,12 +111,13 @@ mod tests {
     #[test]
     fn update_user_posititons() {
         //setup
-        let ran = Ran::new(Rect::new(Point::new(0.0, 0.0), Point::new(1., 1.)));
+        let position = Point::new(0.5, 0.5);
+        let mut ran = Ran::new(position, 0.5);
         let mut users: Vec<User> = (0..20).map(User::new).collect();
         for user in users.iter_mut().take(10) {
             user.add_path(MultiPoint::new(vec![
                 Point::new(0.5, 0.5),
-                Point::new(0.9, 0.9),
+                Point::new(0.8, 0.8),
             ]));
         }
         for user in users.iter_mut().skip(10) {
@@ -142,12 +144,13 @@ mod tests {
     #[test]
     fn get_all_users() {
         //setup
-        let ran = Ran::new(Rect::new(Point::new(0.0, 0.0), Point::new(1., 1.)));
+        let position = Point::new(0.5, 0.5);
+        let mut ran = Ran::new(position, 0.5);
         let mut users: Vec<User> = (0..20).map(User::new).collect();
         for user in users.iter_mut().take(10) {
             user.add_path(MultiPoint::new(vec![
                 Point::new(0.5, 0.5),
-                Point::new(0.9, 0.9),
+                Point::new(0.8, 0.8),
             ]));
         }
         for user in users.iter_mut().skip(10) {
@@ -182,12 +185,13 @@ mod tests {
     #[test]
     fn get_connected_users() {
         //setup
-        let ran = Ran::new(Rect::new(Point::new(0.0, 0.0), Point::new(1., 1.)));
+        let position = Point::new(0.5, 0.5);
+        let mut ran = Ran::new(position, 0.5);
         let mut users: Vec<User> = (0..20).map(User::new).collect();
         for user in users.iter_mut().take(10) {
             user.add_path(MultiPoint::new(vec![
                 Point::new(0.5, 0.5),
-                Point::new(0.9, 0.9),
+                Point::new(0.8, 0.8),
             ]));
         }
         for user in users.iter_mut().skip(10) {
