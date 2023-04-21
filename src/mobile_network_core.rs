@@ -84,15 +84,14 @@ mod tests {
     use std::iter::repeat;
     use std::net::Ipv4Addr;
 
-    use geo::{MultiPoint, Point, Rect};
-
+    use geo::{MultiPoint, Point};
     use super::*;
 
     #[test]
     fn try_connect_orphans() {
         //setup
         let position = Point::new(0.5, 0.5);
-        let mut ran = Ran::new(position, 0.5);
+        let ran = Ran::new(position, 0.5);
         let mut usr = User::new(0);
         usr.add_path(MultiPoint::new(vec![
             Point::new(0.5, 0.5),
@@ -112,7 +111,7 @@ mod tests {
     fn update_user_posititons() {
         //setup
         let position = Point::new(0.5, 0.5);
-        let mut ran = Ran::new(position, 0.5);
+        let ran = Ran::new(position, 0.5);
         let mut users: Vec<User> = (0..20).map(User::new).collect();
         for user in users.iter_mut().take(10) {
             user.add_path(MultiPoint::new(vec![
@@ -145,7 +144,7 @@ mod tests {
     fn get_all_users() {
         //setup
         let position = Point::new(0.5, 0.5);
-        let mut ran = Ran::new(position, 0.5);
+        let ran = Ran::new(position, 0.5);
         let mut users: Vec<User> = (0..20).map(User::new).collect();
         for user in users.iter_mut().take(10) {
             user.add_path(MultiPoint::new(vec![
@@ -186,7 +185,7 @@ mod tests {
     fn get_connected_users() {
         //setup
         let position = Point::new(0.5, 0.5);
-        let mut ran = Ran::new(position, 0.5);
+        let ran = Ran::new(position, 0.5);
         let mut users: Vec<User> = (0..20).map(User::new).collect();
         for user in users.iter_mut().take(10) {
             user.add_path(MultiPoint::new(vec![

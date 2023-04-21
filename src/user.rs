@@ -1,4 +1,4 @@
-use std::ops::Range;
+use std::{fmt::Display, ops::Range};
 
 use geo::{MultiPoint, Point};
 use rand::Rng;
@@ -8,6 +8,16 @@ pub struct User {
     id: u32,
     posititon: usize,
     path: Option<MultiPoint>,
+}
+
+impl Display for User {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let pos = match self.current_pos() {
+            Some(pos) => pos,
+            None => panic!("Someone forgot to add a path"),
+        };
+        f.write_str(&format!("id: {}, ({},{})", self.id, pos.x(), pos.y()).to_string())
+    }
 }
 
 impl User {

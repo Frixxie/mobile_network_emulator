@@ -8,24 +8,29 @@ mod pdu_session;
 mod ran;
 mod subscription;
 mod user;
-use std::ops::Range;
+use std::{
+    iter::repeat,
+    net::{IpAddr, Ipv4Addr},
+    ops::Range,
+};
 
 use geo::Point;
+use mobile_network_core::MobileNetworkCore;
+use ran::Ran;
 use rand::prelude::*;
 use user::User;
 
 fn random_point(rng: &mut ThreadRng, range: &Range<f64>) -> Point {
-    let min = range.start;
-    let max = range.start;
-    let x: f64 = rng.gen_range(min..max);
-    let y: f64 = rng.gen_range(min..max);
+    let x: f64 = rng.gen_range(range.start..range.end);
+    let y: f64 = rng.gen_range(range.start..range.end);
     Point::new(x, y)
 }
 
 fn main() {
     let range = -1000.0..1000.0;
     let mut rng = rand::thread_rng();
-    let mut users: Vec<User> = (0u32..)
+    let users = (0u32..)
+        .take(1 << 14)
         .map(|id| (id, random_point(&mut rng, &range)))
         .map(|(id, starting_point)| {
             let mut user = User::new(id);
@@ -34,4 +39,29 @@ fn main() {
             user
         })
         .collect();
+
+    let rans = repeat(random_point(&mut rng, &range))
+        .take(1 << 10)
+        .map(|point| Ran::new(point, 100.0))
+        .collect();
+
+    let ip_addresses = repeat((rng.gen(), rng.gen(), rng.gen(), rng.gen()))
+        .take(1 << 14)
+        .map(|(first, second, thrid, foruth)| {
+            IpAddr::V4(Ipv4Addr::new(first, second, thrid, foruth))
+        })
+        .collect();
+
+    let mut mnc = MobileNetworkCore::new(rans, users, ip_addresses);
+
+    mnc.try_connect_orphans();
+    loop {
+        mnc.update_user_positions();
+        mnc.try_connect_orphans();
+        let usrs = mnc.get_connected_users();
+        println!("Current connected users");
+        for usr in usrs.iter() {
+            println!("{}", usr);
+        }
+    }
 }
