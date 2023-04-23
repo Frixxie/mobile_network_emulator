@@ -30,7 +30,7 @@ fn main() {
     let range = -1000.0..1000.0;
     let mut rng = rand::thread_rng();
     let users = (0u32..)
-        .take(1 << 14)
+        .take(1024)
         .map(|id| (id, random_point(&mut rng, &range)))
         .map(|(id, starting_point)| {
             let mut user = User::new(id);
@@ -41,12 +41,12 @@ fn main() {
         .collect();
 
     let rans = repeat(random_point(&mut rng, &range))
-        .take(1 << 10)
-        .map(|point| Ran::new(point, 100.0))
+        .take(32)
+        .map(|point| Ran::new(point, 150.0))
         .collect();
 
     let ip_addresses = repeat((rng.gen(), rng.gen(), rng.gen(), rng.gen()))
-        .take(1 << 14)
+        .take(1024)
         .map(|(first, second, thrid, foruth)| {
             IpAddr::V4(Ipv4Addr::new(first, second, thrid, foruth))
         })
@@ -54,14 +54,10 @@ fn main() {
 
     let mut mnc = MobileNetworkCore::new(rans, users, ip_addresses);
 
-    mnc.try_connect_orphans();
     loop {
-        mnc.update_user_positions();
         mnc.try_connect_orphans();
+        mnc.update_user_positions();
         let usrs = mnc.get_connected_users();
-        println!("Current connected users");
-        for usr in usrs.iter() {
-            println!("{}", usr);
-        }
+        println!("Current connected users {}", usrs.len());
     }
 }

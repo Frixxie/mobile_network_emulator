@@ -2,12 +2,29 @@ use std::{fmt::Display, ops::Range};
 
 use geo::{MultiPoint, Point};
 use rand::Rng;
+use serde::{ser::SerializeStruct, Serialize};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct User {
     id: u32,
     posititon: usize,
     path: Option<MultiPoint>,
+}
+
+impl Serialize for User {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let pos = match self.current_pos() {
+            Some(point) => point,
+            None => panic!("User has no added path"),
+        };
+        let mut state = serializer.serialize_struct("User", 2)?;
+        state.serialize_field("x", &pos.x())?;
+        state.serialize_field("y", &pos.y())?;
+        state.end()
+    }
 }
 
 impl Display for User {
@@ -90,6 +107,18 @@ mod tests {
         assert_eq!(next_pos, 0);
         let current_pos = user.current_pos().unwrap();
         assert_eq!(current_pos, Point::new(0.0, 0.1));
+    }
+
+    #[test]
+    fn serialize() {
+        let mut user = User::new(0);
+        let path = MultiPoint(vec![Point::new(0.0, 0.1), Point::new(1., 1.)]);
+
+        let res = "{\"x\":0.0,\"y\":0.1}";
+
+        user.add_path(path);
+        let serialized = serde_json::to_string(&user).unwrap();
+        assert_eq!(serialized, res);
     }
 
     #[test]

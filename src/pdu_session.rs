@@ -22,6 +22,10 @@ impl PDUSession {
         &self.user
     }
 
+    pub fn update_user_position(&mut self) -> Option<usize> {
+        self.user.next_pos()
+    }
+
     pub fn ip(&self) -> &IpAddr {
         &self.ip_address
     }

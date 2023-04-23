@@ -28,21 +28,20 @@ impl MobileNetworkCore {
 
     /// Updates all users positions and places them in orphans.
     pub fn update_user_positions(&mut self) {
-        self.orphans = self
+        self.orphans.iter_mut().for_each(|user| {
+            user.next_pos();
+        });
+        let mut new_orphans = self
             .rans
             .iter_mut()
-            .flat_map(|ran| ran.get_connected_users())
+            .flat_map(|ran| ran.update_connected_users())
             .map(|pdu_session| {
                 let (user, ip_address) = pdu_session.release();
                 self.available_ip_addresses.push(ip_address);
                 user
             })
-            .chain(self.orphans.drain(..))
-            .map(|mut user| {
-                user.next_pos();
-                user
-            })
-            .collect()
+            .collect();
+        self.orphans.append(&mut new_orphans);
     }
 
     pub fn try_connect_orphans(&mut self) {
@@ -84,8 +83,8 @@ mod tests {
     use std::iter::repeat;
     use std::net::Ipv4Addr;
 
-    use geo::{MultiPoint, Point};
     use super::*;
+    use geo::{MultiPoint, Point};
 
     #[test]
     fn try_connect_orphans() {
@@ -135,7 +134,7 @@ mod tests {
         mn.try_connect_orphans();
         assert_eq!(mn.orphans.len(), 0);
         mn.update_user_positions();
-        assert_eq!(mn.orphans.len(), 20);
+        assert_eq!(mn.orphans.len(), 10);
         mn.try_connect_orphans();
         assert_eq!(mn.orphans.len(), 10);
     }
@@ -171,7 +170,6 @@ mod tests {
         assert_eq!(all_users.len(), 20);
 
         mn.update_user_positions();
-        assert_eq!(mn.orphans.len(), 20);
         let all_users = mn.get_all_users();
         assert_eq!(all_users.len(), 20);
 
@@ -212,9 +210,6 @@ mod tests {
         assert_eq!(connected_users.len(), 20);
 
         mn.update_user_positions();
-        assert_eq!(mn.orphans.len(), 20);
-        let connected_users = mn.get_connected_users();
-        assert_eq!(connected_users.len(), 0);
 
         mn.try_connect_orphans();
         assert_eq!(mn.orphans.len(), 10);

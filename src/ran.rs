@@ -23,6 +23,26 @@ impl Ran {
         self.connected_users.drain(..).collect()
     }
 
+    pub fn update_connected_users(&mut self) -> Vec<PDUSession> {
+        self.connected_users.iter_mut().for_each(|pdu_session| {
+            match pdu_session.update_user_position() {
+                Some(_) => (),
+                None => panic!("PDU Session user is missing trail"),
+            }
+        });
+
+        let mut res: Vec<PDUSession> = Vec::new();
+        let tmp: Vec<PDUSession> = self.connected_users.drain(..).collect();
+        tmp.into_iter().for_each(|pdu_session| {
+            if self.contains(pdu_session.user()) {
+                self.connected_users.push(pdu_session);
+            } else {
+                res.push(pdu_session);
+            }
+        });
+        res
+    }
+
     pub fn get_current_connected_users(&self) -> Vec<&User> {
         self.connected_users
             .iter()
@@ -55,9 +75,6 @@ mod tests {
     use std::net::{IpAddr, Ipv4Addr};
 
     use super::*;
-
-    #[test]
-    fn create() {}
 
     #[test]
     fn connect_users() {
