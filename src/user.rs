@@ -1,8 +1,11 @@
-use std::{fmt::Display, ops::Range};
+use std::{f64::consts::PI, fmt::Display, ops::Range};
 
 use geo::{MultiPoint, Point};
-use rand::{distributions::WeightedIndex, prelude::Distribution, rngs::ThreadRng};
+use rand::{prelude::Distribution, rngs::ThreadRng};
+use rand_distr::Normal;
 use serde::{ser::SerializeStruct, Serialize};
+
+const VELOCITY: f64 = 1.0;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct User {
@@ -21,6 +24,7 @@ impl Serialize for User {
             None => panic!("User has no added path"),
         };
         let mut state = serializer.serialize_struct("User", 2)?;
+        state.serialize_field("id", &self.id)?;
         state.serialize_field("x", &pos.x())?;
         state.serialize_field("y", &pos.y())?;
         state.end()
@@ -68,27 +72,32 @@ impl User {
         }
     }
 
-    fn next_dir(rng: &mut ThreadRng, last_x: i8, last_y: i8) -> (i8, i8) {
-        let possibilities = [(1, 0, 0, 1), (0, 1, -1, 0), (0, -1, 1, 0), (-1, 0, 0, -1)];
-        let weights = [0.5, 0.25, 0.25, 0.1];
+    fn next_dir(rng: &mut ThreadRng, mut last_x: f64, mut last_y: f64) -> (f64, f64) {
+        let length = (last_x * last_x + last_y * last_y).sqrt();
+        last_x /= length;
+        last_y /= length;
 
-        // choose index based on weights
-        let idx: usize = WeightedIndex::new(&weights).unwrap().sample(rng);
+        let normal = Normal::new(0.0, PI / 3.0).unwrap();
 
-        let (a, b, c, d) = possibilities[idx];
-        (a * last_x + b * last_y, c * last_x + d * last_y)
+        let mut alpha = normal.sample(rng);
+        alpha = alpha.clamp(-PI, PI);
+
+        (
+            alpha.cos() * last_x + alpha.sin() * last_y,
+            alpha.cos() * last_y - alpha.sin() * last_x,
+        )
     }
 
     pub fn generate_user_path(bounds: &Range<f64>, start_pos: Point, length: usize) -> MultiPoint {
         let mut rng = rand::thread_rng();
         let mut res = Vec::new();
         res.push(start_pos);
-        let mut diff = (1, 0);
+        let mut diff = (1.0, 0.0);
         for i in 0..length - 1 {
             diff = Self::next_dir(&mut rng, diff.0, diff.1);
             let point = Point::new(
-                (res[i].x() + f64::from(diff.0)) % bounds.start,
-                (res[i].y() + f64::from(diff.1)) % bounds.end,
+                (res[i].x() + diff.0 * VELOCITY) % bounds.start,
+                (res[i].y() + diff.1 * VELOCITY) % bounds.end,
             );
             res.push(point)
         }
@@ -147,6 +156,10 @@ mod tests {
     #[test]
     fn generate_path() {
         let path = User::generate_user_path(&(100.0..100.), (50., 50.).into(), 1 << 7);
+        for point in &path {
+            println!("{},{}", point.x(), point.y());
+        }
         assert_eq!(path.iter().count(), 1 << 7);
+        assert!(false);
     }
 }

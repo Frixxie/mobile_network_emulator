@@ -43,7 +43,7 @@ fn random_point(rng: &mut ThreadRng, range: &Range<f64>) -> Point {
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
     let range = -500.0..500.;
-    let num_users = 1 << 10;
+    let num_users = 5;
     let num_rans = 16;
     let num_edge_data_centers = 16;
 
