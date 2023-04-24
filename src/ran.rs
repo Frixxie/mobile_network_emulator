@@ -1,9 +1,12 @@
 use geo::Contains;
 use geo::EuclideanDistance;
 use geo::Point;
+use serde::ser::SerializeStruct;
+use serde::Serialize;
 
 use crate::{pdu_session::PDUSession, user::User};
 
+#[derive(Debug, Clone)]
 pub struct Ran {
     position: Point,
     radius: f64,
@@ -66,6 +69,19 @@ impl Contains<User> for Ran {
             None => panic!("User should have position before calling this function"),
         };
         self.position.euclidean_distance(&user_pos).abs() <= self.radius
+    }
+}
+
+impl Serialize for Ran {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut state = serializer.serialize_struct("Ran", 3)?;
+        state.serialize_field("x", &self.position.x())?;
+        state.serialize_field("y", &self.position.y())?;
+        state.serialize_field("radius", &self.radius)?;
+        state.end()
     }
 }
 

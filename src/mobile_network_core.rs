@@ -26,7 +26,7 @@ impl MobileNetworkCore {
         }
     }
 
-    /// Updates all users positions and places them in orphans.
+    /// Updates all users positions and places new orphans in orphans.
     pub fn update_user_positions(&mut self) {
         self.orphans.iter_mut().for_each(|user| {
             user.next_pos();
@@ -61,6 +61,10 @@ impl MobileNetworkCore {
             }
         }
         self.orphans = tmp_orphans;
+    }
+
+    pub fn get_rans(&self) -> Vec<&Ran> {
+        self.rans.iter().map(|ran| ran).collect()
     }
 
     pub fn get_connected_users(&self) -> Vec<&User> {
