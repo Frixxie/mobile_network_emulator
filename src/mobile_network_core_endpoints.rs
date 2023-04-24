@@ -53,11 +53,12 @@ pub async fn get_connected_users(
 pub async fn update_user_positions(
     mobile_network_core_wrapper: Data<MobileNetworkCoreWrapper>,
 ) -> impl Responder {
-    mobile_network_core_wrapper
+    let mut mnc = mobile_network_core_wrapper
         .mobile_network_core
         .write()
-        .await
-        .update_user_positions();
+        .await;
+    mnc.try_connect_orphans();
+    mnc.update_user_positions();
     "OK"
 }
 

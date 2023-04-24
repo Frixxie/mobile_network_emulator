@@ -11,7 +11,7 @@ mod ran;
 mod subscription;
 mod user;
 use std::{
-    iter::repeat,
+    iter::repeat_with,
     net::{IpAddr, Ipv4Addr},
     ops::Range,
 };
@@ -43,9 +43,14 @@ fn random_point(rng: &mut ThreadRng, range: &Range<f64>) -> Point {
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
     let range = -500.0..500.;
+    let num_users = 1 << 10;
+    let num_rans = 16;
+    let num_edge_data_centers = 16;
+
     let mut rng = rand::thread_rng();
+
     let users = (0u32..)
-        .take(2048)
+        .take(num_users)
         .map(|id| (id, random_point(&mut rng, &range)))
         .map(|(id, starting_point)| {
             let mut user = User::new(id);
@@ -55,33 +60,24 @@ async fn main() -> std::io::Result<()> {
         })
         .collect();
 
-    let rans = repeat(random_point(&mut rng, &range))
-        .take(16)
+    let rans = repeat_with(|| random_point(&mut rng, &range))
+        .take(num_rans)
         .map(|point| Ran::new(point, 150.0))
         .collect();
 
-    let ip_addresses = repeat((rng.gen(), rng.gen(), rng.gen(), rng.gen()))
-        .take(1024)
+    let ip_addresses = repeat_with(|| (rng.gen(), rng.gen(), rng.gen(), rng.gen()))
+        .take(num_users)
         .map(|(first, second, thrid, foruth)| {
             IpAddr::V4(Ipv4Addr::new(first, second, thrid, foruth))
         })
         .collect();
 
-    let mut mnc = MobileNetworkCore::new(rans, users, ip_addresses);
-    loop {
-        mnc.try_connect_orphans();
-        mnc.update_user_positions();
-        let usrs = mnc.get_connected_users();
-        for user in &usrs {
-            println!("{}", user);
-        }
-        println!("Current connected users {}", usrs.len());
-    }
+    let mnc = MobileNetworkCore::new(rans, users, ip_addresses);
     let mnc_wrapper = MobileNetworkCoreWrapper::new(mnc);
     let mnc_wrapper_data = Data::new(mnc_wrapper);
 
     let edge_data_centers: Vec<EdgeDataCenter> = (0u32..)
-        .take(16)
+        .take(num_edge_data_centers)
         .map(|id| (id, random_point(&mut rng, &range)))
         .map(|(id, starting_point)| {
             EdgeDataCenter::new(id, &format!("edc: {}", id), starting_point)
@@ -93,6 +89,7 @@ async fn main() -> std::io::Result<()> {
     let network_wrapper_data = Data::new(network_wrapper);
 
     HttpServer::new(move || {
+        let cors = actix_cors::Cors::permissive();
         App::new()
             .service(
                 web::scope("/network")
@@ -110,6 +107,7 @@ async fn main() -> std::io::Result<()> {
                     .service(update_user_positions)
                     .app_data(mnc_wrapper_data.clone()),
             )
+            .wrap(cors)
     })
     .bind(("127.0.0.1", 8080))?
     .run()

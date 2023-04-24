@@ -3,7 +3,7 @@ use std::{error::Error, fmt::Display};
 use crate::{application::Application, edge_data_center::EdgeDataCenter};
 
 #[derive(Debug)]
-struct NetworkError {
+pub struct NetworkError {
     message: String,
 }
 
