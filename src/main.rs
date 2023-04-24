@@ -1,6 +1,7 @@
 mod application;
 mod application_runtime;
 mod edge_data_center;
+mod network_endpoints;
 mod mobile_network_core;
 mod mobule_network_core_event;
 mod network;

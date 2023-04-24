@@ -42,7 +42,9 @@ impl ApplicationRuntime {
         application: Application,
     ) -> Result<(), ApplicationRuntimeError> {
         if self.contains_application(application.url()) {
-            return Err(ApplicationRuntimeError::new("Application already exists".to_string()));
+            return Err(ApplicationRuntimeError::new(
+                "Application already exists".to_string(),
+            ));
         }
         self.applications.push((application, 0));
         Ok(())
@@ -58,7 +60,9 @@ impl ApplicationRuntime {
                 return Ok(());
             }
         }
-        Err(ApplicationRuntimeError::new("Application does not exist".to_string()))
+        Err(ApplicationRuntimeError::new(
+            "Application does not exist".to_string(),
+        ))
     }
 
     pub fn use_application(
@@ -71,7 +75,9 @@ impl ApplicationRuntime {
                 return Ok(current_application.1);
             }
         }
-        Err(ApplicationRuntimeError::new("Application does not exist".to_string()))
+        Err(ApplicationRuntimeError::new(
+            "Application does not exist".to_string(),
+        ))
     }
 
     pub fn contains_application(&self, url: &Url) -> bool {
@@ -84,6 +90,13 @@ impl ApplicationRuntime {
 
     pub fn num_applications(&self) -> usize {
         self.applications.len()
+    }
+
+    pub fn get_applications(&self) -> Vec<&Application> {
+        self.applications
+            .iter()
+            .map(|(appliaction, _id)| appliaction)
+            .collect()
     }
 }
 
@@ -175,9 +188,7 @@ mod tests {
         assert_eq!(application_runtime.applications.len(), 0);
         assert_eq!(application_runtime.num_applications(), 0);
 
-        application_runtime
-            .add_application(application)
-            .unwrap();
+        application_runtime.add_application(application).unwrap();
 
         assert_eq!(application_runtime.applications.len(), 1);
         assert_eq!(application_runtime.num_applications(), 1);

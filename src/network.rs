@@ -50,6 +50,17 @@ impl Network {
             ))),
         }
     }
+
+    pub fn get_edge_data_center(&self, id: usize) -> Option<&EdgeDataCenter> {
+        match self
+            .edge_data_centers
+            .iter()
+            .find(|(edge_data_center, _delay)| edge_data_center.get_id() == id)
+        {
+            Some((edge_data_center, _delay)) => Some(&edge_data_center),
+            None => None,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -63,12 +74,13 @@ mod tests {
     #[test]
     fn create() {
         let edge_data_centers = repeat((
+            0,
             "Fredrik's edge data center",
             Point::new(0.0, 0.0),
             Duration::from_secs(1),
         ))
         .take(32)
-        .map(|(name, position, delay)| (EdgeDataCenter::new(name, position), delay))
+        .map(|(id, name, position, delay)| (EdgeDataCenter::new(id, name, position), delay))
         .collect();
 
         let network = Network::new(edge_data_centers);
@@ -79,12 +91,13 @@ mod tests {
     #[test]
     fn use_application() {
         let mut edge_data_centers: Vec<(EdgeDataCenter, Duration)> = repeat((
+            0,
             "Fredrik's edge data center",
             Point::new(0.0, 0.0),
             Duration::from_secs(1),
         ))
         .take(2)
-        .map(|(name, position, delay)| (EdgeDataCenter::new(name, position), delay))
+        .map(|(id, name, position, delay)| (EdgeDataCenter::new(id, name, position), delay))
         .collect();
         let application = Application::new(Url::parse("http://fasteraune.com").unwrap(), 0);
         edge_data_centers[0]
@@ -101,12 +114,13 @@ mod tests {
     #[test]
     fn use_application_not_present_should_fail() {
         let edge_data_centers: Vec<(EdgeDataCenter, Duration)> = repeat((
+            0,
             "Fredrik's edge data center",
             Point::new(0.0, 0.0),
             Duration::from_secs(1),
         ))
         .take(1)
-        .map(|(name, position, delay)| (EdgeDataCenter::new(name, position), delay))
+        .map(|(id, name, position, delay)| (EdgeDataCenter::new(id, name, position), delay))
         .collect();
         let application = Application::new(Url::parse("http://fasteraune.com").unwrap(), 0);
 

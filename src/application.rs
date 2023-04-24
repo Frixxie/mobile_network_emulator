@@ -1,9 +1,22 @@
+use serde::{ser::SerializeStruct, Serialize};
 use url::Url;
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Application {
     url: Url,
     id: u32,
+}
+
+impl Serialize for Application {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut state = serializer.serialize_struct("Application", 2)?;
+        state.serialize_field("url", self.url.as_str())?;
+        state.serialize_field("id", &self.id)?;
+        state.end()
+    }
 }
 
 impl Application {
@@ -17,6 +30,15 @@ impl Application {
 
     pub fn id(&self) -> &u32 {
         &self.id
+    }
+}
+
+impl Clone for Application {
+    fn clone(&self) -> Self {
+        Self {
+            id: self.id,
+            url: self.url.clone(),
+        }
     }
 }
 
