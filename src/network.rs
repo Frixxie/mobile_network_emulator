@@ -57,7 +57,7 @@ impl Network {
             .iter()
             .find(|(edge_data_center, _delay)| edge_data_center.get_id() == id)
         {
-            Some((edge_data_center, _delay)) => Some(&edge_data_center),
+            Some((edge_data_center, _delay)) => Some(edge_data_center),
             None => None,
         }
     }

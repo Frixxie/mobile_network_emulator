@@ -33,7 +33,7 @@ impl Display for User {
             Some(pos) => pos,
             None => panic!("Someone forgot to add a path"),
         };
-        f.write_str(&format!("id: {}, ({},{})", self.id, pos.x(), pos.y()).to_string())
+        f.write_str(&format!("id: {}, ({},{})", self.id, pos.x(), pos.y()))
     }
 }
 

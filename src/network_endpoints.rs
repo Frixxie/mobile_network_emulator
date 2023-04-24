@@ -1,6 +1,6 @@
-use actix_web::delete;
+
 use actix_web::web::{Data, Json, Path};
-use actix_web::{get, post, web, Responder};
+use actix_web::{get, Responder};
 use serde::Deserialize;
 use tokio::sync::RwLock;
 
@@ -37,8 +37,7 @@ pub async fn get_applications(
         .get_edge_data_center(*id)
         .unwrap()
         .get_applications()
-        .into_iter()
-        .map(|application| application.clone())
+        .into_iter().cloned()
         .collect();
     Json(applications)
 }
