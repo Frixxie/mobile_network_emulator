@@ -64,7 +64,7 @@ impl MobileNetworkCore {
     }
 
     pub fn get_rans(&self) -> Vec<&Ran> {
-        self.rans.iter().map(|ran| ran).collect()
+        self.rans.iter().collect()
     }
 
     pub fn get_connected_users(&self) -> Vec<&User> {

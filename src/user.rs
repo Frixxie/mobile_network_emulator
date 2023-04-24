@@ -1,7 +1,7 @@
 use std::{fmt::Display, ops::Range};
 
 use geo::{MultiPoint, Point};
-use rand::{rngs::ThreadRng, seq::SliceRandom, Rng};
+use rand::{rngs::ThreadRng, seq::SliceRandom};
 use serde::{ser::SerializeStruct, Serialize};
 
 #[derive(Debug, PartialEq, Clone)]
@@ -76,7 +76,7 @@ impl User {
             x = *possible_dir.choose(rng).unwrap();
             y = *possible_dir.choose(rng).unwrap();
         }
-        (x.clone(), y.clone())
+        (x, y)
     }
 
     pub fn generate_user_path(bounds: &Range<f64>, start_pos: Point, length: usize) -> MultiPoint {

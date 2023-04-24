@@ -58,7 +58,6 @@ impl Ran {
             &self.position,
             self.connected_users
                 .iter_mut()
-                .map(|pdu_session| pdu_session)
                 .collect(),
         )
     }

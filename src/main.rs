@@ -57,7 +57,7 @@ fn main() {
 
     let mut mnc = MobileNetworkCore::new(rans, users, ip_addresses);
 
-    let edge_data_centers: Vec<EdgeDataCenter> = (0u32..)
+    let _edge_data_centers: Vec<EdgeDataCenter> = (0u32..)
         .take(16)
         .map(|id| (id, random_point(&mut rng, &range)))
         .map(|(id, starting_point)| {
