@@ -1,7 +1,7 @@
 use std::{fmt::Display, ops::Range};
 
 use geo::{MultiPoint, Point};
-use rand::Rng;
+use rand::{rngs::ThreadRng, seq::SliceRandom, Rng};
 use serde::{ser::SerializeStruct, Serialize};
 
 #[derive(Debug, PartialEq, Clone)]
@@ -31,7 +31,7 @@ impl Display for User {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let pos = match self.current_pos() {
             Some(pos) => pos,
-            None => panic!("Someone forgot to add a path"),
+            None => panic!("User has no added path"),
         };
         f.write_str(&format!("id: {}, ({},{})", self.id, pos.x(), pos.y()))
     }
@@ -68,15 +68,27 @@ impl User {
         }
     }
 
+    fn next_dir(rng: &mut ThreadRng, last_x: i8, last_y: i8) -> (i8, i8) {
+        let possible_dir = vec![-1, 0, 1];
+        let mut x = last_x;
+        let mut y = last_y;
+        while x == last_x && y == last_y {
+            x = *possible_dir.choose(rng).unwrap();
+            y = *possible_dir.choose(rng).unwrap();
+        }
+        (x.clone(), y.clone())
+    }
+
     pub fn generate_user_path(bounds: &Range<f64>, start_pos: Point, length: usize) -> MultiPoint {
         let mut rng = rand::thread_rng();
         let mut res = Vec::new();
         res.push(start_pos);
+        let mut diff = (0, 0);
         for i in 0..length - 1 {
-            let diff = (rng.gen_range(-1.0..1.), rng.gen_range(-1.0..1.));
+            diff = Self::next_dir(&mut rng, diff.0, diff.1);
             let point = Point::new(
-                (res[i].x() + diff.0) % bounds.start,
-                (res[i].y() + diff.1) % bounds.end,
+                (res[i].x() + f64::from(diff.0)) % bounds.start,
+                (res[i].y() + f64::from(diff.1)) % bounds.end,
             );
             res.push(point)
         }
