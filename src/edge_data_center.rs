@@ -4,6 +4,7 @@ use std::{
 };
 
 use geo::Point;
+use serde::{ser::SerializeStruct, Serialize};
 use url::Url;
 
 use crate::{application::Application, application_runtime::ApplicationRuntime};
@@ -27,6 +28,7 @@ impl Display for EdgeDataCenterError {
 
 impl Error for EdgeDataCenterError {}
 
+#[derive(Debug, Clone)]
 pub struct EdgeDataCenter {
     application_runtime: ApplicationRuntime,
     id: usize,
@@ -91,6 +93,20 @@ impl EdgeDataCenter {
 
     pub fn get_applications(&self) -> Vec<&Application> {
         self.application_runtime.get_applications()
+    }
+}
+
+impl Serialize for EdgeDataCenter {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut state = serializer.serialize_struct("EdgeDataCenter", 4)?;
+        state.serialize_field("id", &self.id)?;
+        state.serialize_field("name", &self.name)?;
+        state.serialize_field("x", &self.position.x())?;
+        state.serialize_field("y", &self.position.y())?;
+        state.end()
     }
 }
 

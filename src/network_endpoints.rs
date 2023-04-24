@@ -1,10 +1,13 @@
-
+use actix_web::error::ErrorInternalServerError;
 use actix_web::web::{Data, Json, Path};
-use actix_web::{get, Responder};
+use actix_web::{delete, get, post, Responder};
 use serde::Deserialize;
 use tokio::sync::RwLock;
+use url::Url;
 
 use crate::application::Application;
+
+use crate::edge_data_center::EdgeDataCenter;
 use crate::network::Network;
 
 pub struct NetworkWrapper {
@@ -21,8 +24,31 @@ impl NetworkWrapper {
 
 #[derive(Debug, Deserialize)]
 pub struct ApplicationForm {
-    url: String,
-    id: usize,
+    pub url: String,
+    pub id: u32,
+}
+
+impl From<ApplicationForm> for Application {
+    fn from(value: ApplicationForm) -> Self {
+        let url = match Url::parse(&value.url) {
+            Ok(url) => url,
+            Err(e) => panic!("{}", e),
+        };
+        Application::new(url, value.id)
+    }
+}
+
+#[get("/edge_data_centers")]
+pub async fn get_edge_data_centers(network_wrapper: Data<NetworkWrapper>) -> impl Responder {
+    let edge_data_centers: Vec<EdgeDataCenter> = network_wrapper
+        .network
+        .read()
+        .await
+        .get_edge_data_centers()
+        .into_iter()
+        .cloned()
+        .collect();
+    Json(edge_data_centers)
 }
 
 #[get("/{id}/applications")]
@@ -37,25 +63,46 @@ pub async fn get_applications(
         .get_edge_data_center(*id)
         .unwrap()
         .get_applications()
-        .into_iter().cloned()
+        .into_iter()
+        .cloned()
         .collect();
     Json(applications)
 }
 
-// #[post("/{id}/applications")]
-// pub async fn add_application(
-//     id: Path<usize>,
-//     network_wrapper: Data<NetworkWrapper>,
-//     application: Json<ApplicationForm>,
-// ) -> Result<impl Responder, actix_web::Error> {
-//     todo!();
-// }
+#[post("/{id}/applications")]
+pub async fn add_application(
+    id: Path<usize>,
+    network_wrapper: Data<NetworkWrapper>,
+    application: Json<ApplicationForm>,
+) -> Result<impl Responder, actix_web::Error> {
+    match network_wrapper
+        .network
+        .write()
+        .await
+        .set_edge_data_center(*id)
+        .unwrap()
+        .add_application(&application.into_inner().into())
+    {
+        Ok(url) => Ok(url.to_string()),
+        Err(err) => Err(ErrorInternalServerError(err)),
+    }
+}
 
-// #[delete("/{id}/applications")]
-// pub async fn remove_application(
-//     id: Path<usize>,
-//     network_wrapper: web::Data<NetworkWrapper>,
-//     application: web::Json<ApplicationForm>,
-// ) -> Result<impl Responder, actix_web::Error> {
-//     todo!();
-// }
+#[delete("/{id}/applications")]
+pub async fn delete_application(
+    id: Path<usize>,
+    network_wrapper: Data<NetworkWrapper>,
+    application: Json<ApplicationForm>,
+) -> Result<impl Responder, actix_web::Error> {
+    match network_wrapper
+        .network
+        .write()
+        .await
+        .set_edge_data_center(*id)
+        .unwrap()
+        .remove_application(&application.into_inner().into())
+    {
+        Ok(_) => Ok("OK"),
+        Err(err) => Err(ErrorInternalServerError(err)),
+    }
+}

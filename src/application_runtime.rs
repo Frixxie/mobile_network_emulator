@@ -26,6 +26,7 @@ impl Display for ApplicationRuntimeError {
 
 impl Error for ApplicationRuntimeError {}
 
+#[derive(Debug, Clone)]
 pub struct ApplicationRuntime {
     applications: Vec<(Application, u32)>,
 }

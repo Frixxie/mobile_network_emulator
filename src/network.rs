@@ -51,10 +51,28 @@ impl Network {
         }
     }
 
+    pub fn get_edge_data_centers(&self) -> Vec<&EdgeDataCenter> {
+        self.edge_data_centers
+            .iter()
+            .map(|(edge_data_center, _delay)| edge_data_center)
+            .collect()
+    }
+
     pub fn get_edge_data_center(&self, id: usize) -> Option<&EdgeDataCenter> {
         match self
             .edge_data_centers
             .iter()
+            .find(|(edge_data_center, _delay)| edge_data_center.get_id() == id)
+        {
+            Some((edge_data_center, _delay)) => Some(edge_data_center),
+            None => None,
+        }
+    }
+
+    pub fn set_edge_data_center(&mut self, id: usize) -> Option<&mut EdgeDataCenter> {
+        match self
+            .edge_data_centers
+            .iter_mut()
             .find(|(edge_data_center, _delay)| edge_data_center.get_id() == id)
         {
             Some((edge_data_center, _delay)) => Some(edge_data_center),
