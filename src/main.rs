@@ -16,9 +16,20 @@ use std::{
     ops::Range,
 };
 
+use actix_web::{
+    web::{self, Data},
+    App, HttpServer,
+};
 use edge_data_center::EdgeDataCenter;
 use geo::Point;
 use mobile_network_core::MobileNetworkCore;
+use mobile_network_core_endpoints::{
+    get_connected_users, get_rans, get_users, update_user_positions, MobileNetworkCoreWrapper,
+};
+use network::Network;
+use network_endpoints::{
+    add_application, delete_application, get_applications, get_edge_data_centers, NetworkWrapper,
+};
 use ran::Ran;
 use rand::prelude::*;
 use user::User;
@@ -29,11 +40,12 @@ fn random_point(rng: &mut ThreadRng, range: &Range<f64>) -> Point {
     Point::new(x, y)
 }
 
-fn main() {
+#[tokio::main]
+async fn main() -> std::io::Result<()> {
     let range = -500.0..500.;
     let mut rng = rand::thread_rng();
     let users = (0u32..)
-        .take(1024)
+        .take(2048)
         .map(|id| (id, random_point(&mut rng, &range)))
         .map(|(id, starting_point)| {
             let mut user = User::new(id);
@@ -44,7 +56,7 @@ fn main() {
         .collect();
 
     let rans = repeat(random_point(&mut rng, &range))
-        .take(32)
+        .take(16)
         .map(|point| Ran::new(point, 150.0))
         .collect();
 
@@ -56,8 +68,19 @@ fn main() {
         .collect();
 
     let mut mnc = MobileNetworkCore::new(rans, users, ip_addresses);
+    loop {
+        mnc.try_connect_orphans();
+        mnc.update_user_positions();
+        let usrs = mnc.get_connected_users();
+        for user in &usrs {
+            println!("{}", user);
+        }
+        println!("Current connected users {}", usrs.len());
+    }
+    let mnc_wrapper = MobileNetworkCoreWrapper::new(mnc);
+    let mnc_wrapper_data = Data::new(mnc_wrapper);
 
-    let _edge_data_centers: Vec<EdgeDataCenter> = (0u32..)
+    let edge_data_centers: Vec<EdgeDataCenter> = (0u32..)
         .take(16)
         .map(|id| (id, random_point(&mut rng, &range)))
         .map(|(id, starting_point)| {
@@ -65,10 +88,31 @@ fn main() {
         })
         .collect();
 
-    loop {
-        mnc.try_connect_orphans();
-        mnc.update_user_positions();
-        let usrs = mnc.get_connected_users();
-        println!("Current connected users {}", usrs.len());
-    }
+    let network = Network::new(edge_data_centers);
+    let network_wrapper = NetworkWrapper::new(network);
+    let network_wrapper_data = Data::new(network_wrapper);
+
+    HttpServer::new(move || {
+        App::new()
+            .service(
+                web::scope("/network")
+                    .service(get_edge_data_centers)
+                    .service(get_applications)
+                    .service(add_application)
+                    .service(delete_application)
+                    .app_data(network_wrapper_data.clone()),
+            )
+            .service(
+                web::scope("/mobile_network")
+                    .service(get_users)
+                    .service(get_connected_users)
+                    .service(get_rans)
+                    .service(update_user_positions)
+                    .app_data(mnc_wrapper_data.clone()),
+            )
+    })
+    .bind(("127.0.0.1", 8080))?
+    .run()
+    .await?;
+    Ok(())
 }

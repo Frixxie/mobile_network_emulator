@@ -1,4 +1,4 @@
-use std::{error::Error, fmt::Display, time::Duration};
+use std::{error::Error, fmt::Display};
 
 use crate::{application::Application, edge_data_center::EdgeDataCenter};
 
@@ -24,22 +24,22 @@ impl Display for NetworkError {
 impl Error for NetworkError {}
 
 pub struct Network {
-    edge_data_centers: Vec<(EdgeDataCenter, Duration)>,
+    edge_data_centers: Vec<EdgeDataCenter>,
 }
 
 impl Network {
-    pub fn new(edge_data_centers: Vec<(EdgeDataCenter, Duration)>) -> Self {
+    pub fn new(edge_data_centers: Vec<EdgeDataCenter>) -> Self {
         Network { edge_data_centers }
     }
 
+    //TODO: Change this to take in position as well
     pub fn use_application(&mut self, application: &Application) -> Result<(), NetworkError> {
         match self
             .edge_data_centers
             .iter_mut()
-            .find(|(edge_data_center, _delay)| {
-                edge_data_center.contains_application(application.url())
-            }) {
-            Some((edge_data_center, _duration)) => {
+            .find(|edge_data_center| edge_data_center.contains_application(application.url()))
+        {
+            Some(edge_data_center) => {
                 //We know that the edge data center has the application.
                 let _usage = edge_data_center.use_application(application).unwrap();
                 Ok(())
@@ -52,19 +52,16 @@ impl Network {
     }
 
     pub fn get_edge_data_centers(&self) -> Vec<&EdgeDataCenter> {
-        self.edge_data_centers
-            .iter()
-            .map(|(edge_data_center, _delay)| edge_data_center)
-            .collect()
+        self.edge_data_centers.iter().collect()
     }
 
     pub fn get_edge_data_center(&self, id: u32) -> Option<&EdgeDataCenter> {
         match self
             .edge_data_centers
             .iter()
-            .find(|(edge_data_center, _delay)| edge_data_center.get_id() == id)
+            .find(|edge_data_center| edge_data_center.get_id() == id)
         {
-            Some((edge_data_center, _delay)) => Some(edge_data_center),
+            Some(edge_data_center) => Some(edge_data_center),
             None => None,
         }
     }
@@ -73,9 +70,9 @@ impl Network {
         match self
             .edge_data_centers
             .iter_mut()
-            .find(|(edge_data_center, _delay)| edge_data_center.get_id() == id)
+            .find(|edge_data_center| edge_data_center.get_id() == id)
         {
-            Some((edge_data_center, _delay)) => Some(edge_data_center),
+            Some(edge_data_center) => Some(edge_data_center),
             None => None,
         }
     }
@@ -91,15 +88,10 @@ mod tests {
 
     #[test]
     fn create() {
-        let edge_data_centers = repeat((
-            0,
-            "Fredrik's edge data center",
-            Point::new(0.0, 0.0),
-            Duration::from_secs(1),
-        ))
-        .take(32)
-        .map(|(id, name, position, delay)| (EdgeDataCenter::new(id, name, position), delay))
-        .collect();
+        let edge_data_centers = repeat((0, "Fredrik's edge data center", Point::new(0.0, 0.0)))
+            .take(32)
+            .map(|(id, name, position)| (EdgeDataCenter::new(id, name, position)))
+            .collect();
 
         let network = Network::new(edge_data_centers);
 
@@ -108,20 +100,13 @@ mod tests {
 
     #[test]
     fn use_application() {
-        let mut edge_data_centers: Vec<(EdgeDataCenter, Duration)> = repeat((
-            0,
-            "Fredrik's edge data center",
-            Point::new(0.0, 0.0),
-            Duration::from_secs(1),
-        ))
-        .take(2)
-        .map(|(id, name, position, delay)| (EdgeDataCenter::new(id, name, position), delay))
-        .collect();
+        let mut edge_data_centers: Vec<EdgeDataCenter> =
+            repeat((0, "Fredrik's edge data center", Point::new(0.0, 0.0)))
+                .take(2)
+                .map(|(id, name, position)| (EdgeDataCenter::new(id, name, position)))
+                .collect();
         let application = Application::new(Url::parse("http://fasteraune.com").unwrap(), 0);
-        edge_data_centers[0]
-            .0
-            .add_application(&application)
-            .unwrap();
+        edge_data_centers[0].add_application(&application).unwrap();
         let mut network = Network::new(edge_data_centers);
 
         let result = network.use_application(&application);
@@ -131,15 +116,11 @@ mod tests {
 
     #[test]
     fn use_application_not_present_should_fail() {
-        let edge_data_centers: Vec<(EdgeDataCenter, Duration)> = repeat((
-            0,
-            "Fredrik's edge data center",
-            Point::new(0.0, 0.0),
-            Duration::from_secs(1),
-        ))
-        .take(1)
-        .map(|(id, name, position, delay)| (EdgeDataCenter::new(id, name, position), delay))
-        .collect();
+        let edge_data_centers: Vec<EdgeDataCenter> =
+            repeat((0, "Fredrik's edge data center", Point::new(0.0, 0.0)))
+                .take(1)
+                .map(|(id, name, position)| (EdgeDataCenter::new(id, name, position)))
+                .collect();
         let application = Application::new(Url::parse("http://fasteraune.com").unwrap(), 0);
 
         let mut network = Network::new(edge_data_centers);

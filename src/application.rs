@@ -14,7 +14,7 @@ impl Serialize for Application {
     {
         let mut state = serializer.serialize_struct("Application", 2)?;
         state.serialize_field("url", self.url.as_str())?;
-        state.serialize_field("id", &self.id)?;
+        state.serialize_field("id", self.id())?;
         state.end()
     }
 }

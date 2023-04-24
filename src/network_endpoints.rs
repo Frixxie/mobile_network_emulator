@@ -51,7 +51,7 @@ pub async fn get_edge_data_centers(network_wrapper: Data<NetworkWrapper>) -> imp
     Json(edge_data_centers)
 }
 
-#[get("/{id}/applications")]
+#[get("/edge_data_centers/{id}/applications")]
 pub async fn get_applications(
     id: Path<u32>,
     network_wrapper: Data<NetworkWrapper>,
@@ -69,7 +69,7 @@ pub async fn get_applications(
     Json(applications)
 }
 
-#[post("/{id}/applications")]
+#[post("/edge_data_centers/{id}/applications")]
 pub async fn add_application(
     id: Path<u32>,
     network_wrapper: Data<NetworkWrapper>,
@@ -88,7 +88,7 @@ pub async fn add_application(
     }
 }
 
-#[delete("/{id}/applications")]
+#[delete("/edge_data_centers/{id}/applications")]
 pub async fn delete_application(
     id: Path<u32>,
     network_wrapper: Data<NetworkWrapper>,

@@ -1,7 +1,7 @@
 use std::{fmt::Display, ops::Range};
 
 use geo::{MultiPoint, Point};
-use rand::{rngs::ThreadRng, seq::SliceRandom};
+use rand::{distributions::WeightedIndex, prelude::Distribution, rngs::ThreadRng};
 use serde::{ser::SerializeStruct, Serialize};
 
 #[derive(Debug, PartialEq, Clone)]
@@ -69,21 +69,21 @@ impl User {
     }
 
     fn next_dir(rng: &mut ThreadRng, last_x: i8, last_y: i8) -> (i8, i8) {
-        let possible_dir = vec![-1, 0, 1];
-        let mut x = last_x;
-        let mut y = last_y;
-        while x == last_x && y == last_y {
-            x = *possible_dir.choose(rng).unwrap();
-            y = *possible_dir.choose(rng).unwrap();
-        }
-        (x, y)
+        let possibilities = [(1, 0, 0, 1), (0, 1, -1, 0), (0, -1, 1, 0), (-1, 0, 0, -1)];
+        let weights = [0.5, 0.25, 0.25, 0.1];
+
+        // choose index based on weights
+        let idx: usize = WeightedIndex::new(&weights).unwrap().sample(rng);
+
+        let (a, b, c, d) = possibilities[idx];
+        (a * last_x + b * last_y, c * last_x + d * last_y)
     }
 
     pub fn generate_user_path(bounds: &Range<f64>, start_pos: Point, length: usize) -> MultiPoint {
         let mut rng = rand::thread_rng();
         let mut res = Vec::new();
         res.push(start_pos);
-        let mut diff = (0, 0);
+        let mut diff = (1, 0);
         for i in 0..length - 1 {
             diff = Self::next_dir(&mut rng, diff.0, diff.1);
             let point = Point::new(
