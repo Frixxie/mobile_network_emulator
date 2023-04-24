@@ -16,6 +16,7 @@ use std::{
     ops::Range,
 };
 
+use edge_data_center::EdgeDataCenter;
 use geo::Point;
 use mobile_network_core::MobileNetworkCore;
 use ran::Ran;
@@ -29,7 +30,7 @@ fn random_point(rng: &mut ThreadRng, range: &Range<f64>) -> Point {
 }
 
 fn main() {
-    let range = -1000.0..1000.0;
+    let range = -500.0..500.;
     let mut rng = rand::thread_rng();
     let users = (0u32..)
         .take(1024)
@@ -55,6 +56,14 @@ fn main() {
         .collect();
 
     let mut mnc = MobileNetworkCore::new(rans, users, ip_addresses);
+
+    let edge_data_centers: Vec<EdgeDataCenter> = (0u32..)
+        .take(16)
+        .map(|id| (id, random_point(&mut rng, &range)))
+        .map(|(id, starting_point)| {
+            EdgeDataCenter::new(id, &format!("edc: {}", id), starting_point)
+        })
+        .collect();
 
     loop {
         mnc.try_connect_orphans();

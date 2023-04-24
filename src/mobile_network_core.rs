@@ -1,6 +1,6 @@
 use std::net::IpAddr;
 
-use geo::Contains;
+use geo::{Contains, Point};
 
 use crate::{
     mobule_network_core_event::MobileNetworkCoreEvent, pdu_session::PDUSession, ran::Ran,
@@ -71,6 +71,13 @@ impl MobileNetworkCore {
         self.rans
             .iter()
             .flat_map(|ran| ran.get_current_connected_users())
+            .collect()
+    }
+
+    pub fn get_mut_pdu_sessions(&mut self) -> Vec<(&Point, Vec<&mut PDUSession>)> {
+        self.rans
+            .iter_mut()
+            .map(|ran| ran.get_mut_current_connected_users())
             .collect()
     }
 

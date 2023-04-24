@@ -31,13 +31,13 @@ impl Error for EdgeDataCenterError {}
 #[derive(Debug, Clone)]
 pub struct EdgeDataCenter {
     application_runtime: ApplicationRuntime,
-    id: usize,
+    id: u32,
     name: String,
     position: Point,
 }
 
 impl EdgeDataCenter {
-    pub fn new(id: usize, name: &str, position: Point) -> Self {
+    pub fn new(id: u32, name: &str, position: Point) -> Self {
         EdgeDataCenter {
             application_runtime: ApplicationRuntime::new(),
             id,
@@ -46,7 +46,7 @@ impl EdgeDataCenter {
         }
     }
 
-    pub fn get_id(&self) -> usize {
+    pub fn get_id(&self) -> u32 {
         self.id
     }
 

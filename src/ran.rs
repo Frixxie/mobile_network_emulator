@@ -53,6 +53,16 @@ impl Ran {
             .collect()
     }
 
+    pub fn get_mut_current_connected_users(&mut self) -> (&Point, Vec<&mut PDUSession>) {
+        (
+            &self.position,
+            self.connected_users
+                .iter_mut()
+                .map(|pdu_session| pdu_session)
+                .collect(),
+        )
+    }
+
     pub fn connect_user(&mut self, user: PDUSession) {
         self.connected_users.push(user);
     }

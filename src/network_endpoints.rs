@@ -53,7 +53,7 @@ pub async fn get_edge_data_centers(network_wrapper: Data<NetworkWrapper>) -> imp
 
 #[get("/{id}/applications")]
 pub async fn get_applications(
-    id: Path<usize>,
+    id: Path<u32>,
     network_wrapper: Data<NetworkWrapper>,
 ) -> impl Responder {
     let applications: Vec<Application> = network_wrapper
@@ -71,7 +71,7 @@ pub async fn get_applications(
 
 #[post("/{id}/applications")]
 pub async fn add_application(
-    id: Path<usize>,
+    id: Path<u32>,
     network_wrapper: Data<NetworkWrapper>,
     application: Json<ApplicationForm>,
 ) -> Result<impl Responder, actix_web::Error> {
@@ -79,7 +79,7 @@ pub async fn add_application(
         .network
         .write()
         .await
-        .set_edge_data_center(*id)
+        .get_mut_edge_data_center(*id)
         .unwrap()
         .add_application(&application.into_inner().into())
     {
@@ -90,7 +90,7 @@ pub async fn add_application(
 
 #[delete("/{id}/applications")]
 pub async fn delete_application(
-    id: Path<usize>,
+    id: Path<u32>,
     network_wrapper: Data<NetworkWrapper>,
     application: Json<ApplicationForm>,
 ) -> Result<impl Responder, actix_web::Error> {
@@ -98,7 +98,7 @@ pub async fn delete_application(
         .network
         .write()
         .await
-        .set_edge_data_center(*id)
+        .get_mut_edge_data_center(*id)
         .unwrap()
         .remove_application(&application.into_inner().into())
     {

@@ -58,7 +58,7 @@ impl Network {
             .collect()
     }
 
-    pub fn get_edge_data_center(&self, id: usize) -> Option<&EdgeDataCenter> {
+    pub fn get_edge_data_center(&self, id: u32) -> Option<&EdgeDataCenter> {
         match self
             .edge_data_centers
             .iter()
@@ -69,7 +69,7 @@ impl Network {
         }
     }
 
-    pub fn set_edge_data_center(&mut self, id: usize) -> Option<&mut EdgeDataCenter> {
+    pub fn get_mut_edge_data_center(&mut self, id: u32) -> Option<&mut EdgeDataCenter> {
         match self
             .edge_data_centers
             .iter_mut()
