@@ -43,9 +43,9 @@ fn random_point(rng: &mut ThreadRng, range: &Range<f64>) -> Point {
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
     let range = -500.0..500.;
-    let num_users = 5;
+    let num_users = 32;
     let num_rans = 16;
-    let num_edge_data_centers = 16;
+    let num_edge_data_centers = 8;
 
     let mut rng = rand::thread_rng();
 
@@ -54,7 +54,7 @@ async fn main() -> std::io::Result<()> {
         .map(|id| (id, random_point(&mut rng, &range)))
         .map(|(id, starting_point)| {
             let mut user = User::new(id);
-            let path = User::generate_user_path(&range, starting_point, 1024);
+            let path = User::generate_user_path(&range, starting_point, 1 << 12);
             user.add_path(path);
             user
         })
@@ -62,7 +62,7 @@ async fn main() -> std::io::Result<()> {
 
     let rans = repeat_with(|| random_point(&mut rng, &range))
         .take(num_rans)
-        .map(|point| Ran::new(point, 150.0))
+        .map(|point| Ran::new(point, 100.0))
         .collect();
 
     let ip_addresses = repeat_with(|| (rng.gen(), rng.gen(), rng.gen(), rng.gen()))

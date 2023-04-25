@@ -5,7 +5,7 @@ use rand::{prelude::Distribution, rngs::ThreadRng};
 use rand_distr::Normal;
 use serde::{ser::SerializeStruct, Serialize};
 
-const VELOCITY: f64 = 1.0;
+const VELOCITY: f64 = 1.5;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct User {
@@ -77,7 +77,7 @@ impl User {
         last_x /= length;
         last_y /= length;
 
-        let normal = Normal::new(0.0, PI / 3.0).unwrap();
+        let normal = Normal::new(0.0, PI / 6.0).unwrap();
 
         let mut alpha = normal.sample(rng);
         alpha = alpha.clamp(-PI, PI);
