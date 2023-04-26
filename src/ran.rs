@@ -28,10 +28,7 @@ impl Ran {
 
     pub fn update_connected_users(&mut self) -> Vec<PDUSession> {
         self.connected_users.iter_mut().for_each(|pdu_session| {
-            match pdu_session.update_user_position() {
-                Some(_) => (),
-                None => panic!("PDU Session user is missing trail"),
-            }
+            pdu_session.update_user_position();
         });
 
         let mut res: Vec<PDUSession> = Vec::new();
@@ -54,12 +51,7 @@ impl Ran {
     }
 
     pub fn get_mut_current_connected_users(&mut self) -> (&Point, Vec<&mut PDUSession>) {
-        (
-            &self.position,
-            self.connected_users
-                .iter_mut()
-                .collect(),
-        )
+        (&self.position, self.connected_users.iter_mut().collect())
     }
 
     pub fn connect_user(&mut self, user: PDUSession) {
@@ -73,11 +65,7 @@ impl Ran {
 
 impl Contains<User> for Ran {
     fn contains(&self, rhs: &User) -> bool {
-        let user_pos = match rhs.current_pos() {
-            Some(pos) => pos,
-            None => panic!("User should have position before calling this function"),
-        };
-        self.position.euclidean_distance(&user_pos).abs() <= self.radius
+        self.position.euclidean_distance(&rhs.current_pos()).abs() <= self.radius
     }
 }
 
@@ -96,7 +84,7 @@ impl Serialize for Ran {
 
 #[cfg(test)]
 mod tests {
-    use geo::{MultiPoint, Point};
+    use geo::Point;
     use std::net::{IpAddr, Ipv4Addr};
 
     use super::*;
@@ -106,7 +94,12 @@ mod tests {
         let position = Point::new(0.5, 0.5);
         let mut ran = Ran::new(position, 0.5);
         let pdu_sessions: Vec<PDUSession> = (0..32)
-            .map(|i| PDUSession::new(User::new(i), IpAddr::V4(Ipv4Addr::LOCALHOST)))
+            .map(|i| {
+                PDUSession::new(
+                    User::new(i, position, 1., &(-50.0..50.)),
+                    IpAddr::V4(Ipv4Addr::LOCALHOST),
+                )
+            })
             .collect();
         ran.connect_users(pdu_sessions.clone());
         assert_eq!(ran.connected_users, pdu_sessions);
@@ -117,7 +110,12 @@ mod tests {
         let position = Point::new(0.5, 0.5);
         let mut ran = Ran::new(position, 0.5);
         let pdu_sessions: Vec<PDUSession> = (0..32)
-            .map(|i| PDUSession::new(User::new(i), IpAddr::V4(Ipv4Addr::LOCALHOST)))
+            .map(|i| {
+                PDUSession::new(
+                    User::new(i, position, 1., &(-50.0..50.)),
+                    IpAddr::V4(Ipv4Addr::LOCALHOST),
+                )
+            })
             .collect();
         pdu_sessions
             .clone()
@@ -127,29 +125,16 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
-    fn contains_should_panic() {
-        let position = Point::new(0.5, 0.5);
-        let ran = Ran::new(position, 0.5);
-        let usr = User::new(0);
-        ran.contains(&usr);
-    }
-
-    #[test]
     fn contains() {
-        let position = Point::new(0.5, 0.5);
+        let mut position = Point::new(0.5, 0.5);
         let ran = Ran::new(position, 0.5);
-        let mut usr = User::new(0);
-
-        usr.add_path(MultiPoint::new(vec![
-            Point::new(0.5, 0.5),
-            Point::new(1.1, 1.1),
-        ]));
+        let mut usr = User::new(0, position, 1.0, &(-50.0..50.));
 
         let mut res = ran.contains(&usr);
         assert!(res);
 
-        usr.next_pos();
+        position = Point::new(1.5, 1.5);
+        usr = User::new(0, position, 1.0, &(-50.0..50.));
 
         res = ran.contains(&usr);
         assert!(!res);
@@ -160,7 +145,12 @@ mod tests {
         let position = Point::new(0.5, 0.5);
         let mut ran = Ran::new(position, 0.5);
         let pdu_sessions: Vec<PDUSession> = (0..32)
-            .map(|i| PDUSession::new(User::new(i), IpAddr::V4(Ipv4Addr::LOCALHOST)))
+            .map(|i| {
+                PDUSession::new(
+                    User::new(i, position, 1., &(-50.0..50.0)),
+                    IpAddr::V4(Ipv4Addr::LOCALHOST),
+                )
+            })
             .collect();
         ran.connect_users(pdu_sessions.clone());
         let all_pdu_sessions = ran.get_connected_users();
@@ -172,7 +162,12 @@ mod tests {
         let position = Point::new(0.5, 0.5);
         let mut ran = Ran::new(position, 0.5);
         let pdu_sessions: Vec<PDUSession> = (0..32)
-            .map(|i| PDUSession::new(User::new(i), IpAddr::V4(Ipv4Addr::LOCALHOST)))
+            .map(|i| {
+                PDUSession::new(
+                    User::new(i, position, 1., &(-50.0..50.)),
+                    IpAddr::V4(Ipv4Addr::LOCALHOST),
+                )
+            })
             .collect();
         ran.connect_users(pdu_sessions);
         let all_pdu_sessions = ran.get_current_connected_users();

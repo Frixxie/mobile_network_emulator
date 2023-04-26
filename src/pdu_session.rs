@@ -1,4 +1,5 @@
 use std::net::IpAddr;
+use geo::Point;
 use url::Url;
 
 use crate::{network::Network, user::User};
@@ -22,7 +23,7 @@ impl PDUSession {
         &self.user
     }
 
-    pub fn update_user_position(&mut self) -> Option<usize> {
+    pub fn update_user_position(&mut self) -> Point {
         self.user.next_pos()
     }
 
@@ -43,12 +44,12 @@ mod tests {
 
     #[test]
     fn create_release() {
-        let user = User::new(1);
+        let user = User::new(1, Point::new(50.0, 50.0), 1.5, &(-50.0..50.0));
         let ip_address = Ipv4Addr::LOCALHOST;
 
         let pbu_session = PDUSession::new(user, std::net::IpAddr::V4(ip_address));
         let (user_1, ip_address_1) = pbu_session.release();
-        assert_eq!(User::new(1), user_1);
+        assert_eq!(User::new(1, Point::new(50.0, 50.0), 1.5, &(-50.0..50.0)), user_1);
         assert_eq!(Ipv4Addr::LOCALHOST, ip_address_1);
     }
 }

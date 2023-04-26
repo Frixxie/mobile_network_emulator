@@ -44,6 +44,7 @@ fn random_point(rng: &mut ThreadRng, range: &Range<f64>) -> Point {
 async fn main() -> std::io::Result<()> {
     let range = -500.0..500.;
     let num_users = 32;
+    let user_velocdity = 1.5;
     let num_rans = 16;
     let num_edge_data_centers = 8;
 
@@ -52,12 +53,7 @@ async fn main() -> std::io::Result<()> {
     let users = (0u32..)
         .take(num_users)
         .map(|id| (id, random_point(&mut rng, &range)))
-        .map(|(id, starting_point)| {
-            let mut user = User::new(id);
-            let path = User::generate_user_path(&range, starting_point, 1 << 12);
-            user.add_path(path);
-            user
-        })
+        .map(|(id, starting_point)| User::new(id, starting_point, user_velocdity, &range))
         .collect();
 
     let rans = repeat_with(|| random_point(&mut rng, &range))
