@@ -1,11 +1,14 @@
 use actix_web::{
-    get,
+    get, post,
     web::{Data, Json},
-    Responder, post,
+    Responder,
 };
 use tokio::sync::RwLock;
 
-use crate::{mobile_network_core::MobileNetworkCore, user::User, ran::Ran, mobile_network_core_subscriber::EventSubscriber};
+use crate::{
+    mobile_network_core::MobileNetworkCore, mobile_network_core_event::EventSubscriber, ran::Ran,
+    user::User,
+};
 
 pub struct MobileNetworkCoreWrapper {
     mobile_network_core: RwLock<MobileNetworkCore>,
@@ -71,8 +74,7 @@ pub async fn subscribe(
         .mobile_network_core
         .write()
         .await;
-    mnc.try_connect_orphans();
-    mnc.update_user_positions();
+    mnc.add_subscriber(event_subscription);
     "OK"
 }
 

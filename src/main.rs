@@ -23,7 +23,7 @@ use edge_data_center::EdgeDataCenter;
 use geo::Point;
 use mobile_network_core::MobileNetworkCore;
 use mobile_network_core_endpoints::{
-    get_connected_users, get_rans, get_users, update_user_positions, MobileNetworkCoreWrapper,
+    get_connected_users, get_rans, get_users, update_user_positions, MobileNetworkCoreWrapper, subscribe,
 };
 use network::Network;
 use network_endpoints::{
@@ -100,6 +100,7 @@ async fn main() -> std::io::Result<()> {
                     .service(get_connected_users)
                     .service(get_rans)
                     .service(update_user_positions)
+                    .service(subscribe)
                     .app_data(mnc_wrapper_data.clone()),
             )
             .wrap(cors)

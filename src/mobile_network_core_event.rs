@@ -1,8 +1,8 @@
 use std::net::{Ipv4Addr, Ipv6Addr};
+use url::Url;
 
 use geo::{Point, Polygon};
-use serde::{Deserialize, Serialize, ser::SerializeStruct};
-use url::Url;
+use serde::{ser::SerializeStruct, Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum EventKind {
@@ -132,15 +132,23 @@ pub struct PdnConnectionInformation {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct MobileNetworkCoreEvent {
-    kind: EventKind,
     event: Event,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct EventSubscriber {
     notify_endpoint: Url,
     kind: EventKind,
     user_ids: Vec<u32>,
+}
+
+impl Deserialize for Url {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        todo!()
+    }
 }
 
 impl Serialize for EventSubscriber {
