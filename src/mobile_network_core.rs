@@ -3,8 +3,8 @@ use std::net::IpAddr;
 use geo::{Contains, Point};
 
 use crate::{
-    mobule_network_core_event::MobileNetworkCoreEvent, pdu_session::PDUSession, ran::Ran,
-    subscription::Subscription, user::User,
+    mobile_network_core_event::MobileNetworkCoreEvent,
+    mobile_network_core_subscriber::EventSubscriber, pdu_session::PDUSession, ran::Ran, user::User,
 };
 
 pub struct MobileNetworkCore {
@@ -12,7 +12,7 @@ pub struct MobileNetworkCore {
     orphans: Vec<User>,
     available_ip_addresses: Vec<IpAddr>,
     events: Vec<MobileNetworkCoreEvent>,
-    event_subscribers: Vec<Subscription>,
+    event_subscribers: Vec<EventSubscriber>,
 }
 
 impl MobileNetworkCore {
@@ -87,22 +87,34 @@ impl MobileNetworkCore {
             .chain(self.orphans.iter())
             .collect()
     }
+
+    pub fn add_subscriber(&mut self, event_subscriber: EventSubscriber) {
+        self.event_subscribers.push(event_subscriber)
+    }
+
+    pub fn get_subscrbers(&mut self, event_subscriber: EventSubscriber) {
+        self.event_subscribers.push(event_subscriber)
+    }
+
+    pub fn publish_events(&self) {
+        todo!();
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::iter::repeat;
+
     use std::net::Ipv4Addr;
 
     use super::*;
-    use geo::{MultiPoint, Point};
+    use geo::Point;
 
     #[test]
     fn try_connect_orphans() {
         //setup
         let position = Point::new(0.5, 0.5);
         let ran = Ran::new(position, 0.5);
-        let mut usr = User::new(0, position, 1.0, &(-50.0..50.));
+        let usr = User::new(0, position, 1.0, &(-50.0..50.));
         let ip_addesses = vec![IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1))];
         let mut mn = MobileNetworkCore::new(vec![ran], vec![usr], ip_addesses);
 

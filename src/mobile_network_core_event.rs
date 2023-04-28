@@ -1,12 +1,22 @@
 use std::net::{Ipv4Addr, Ipv6Addr};
 
 use geo::{Point, Polygon};
+use serde::{Deserialize, Serialize, ser::SerializeStruct};
+use url::Url;
 
-pub enum EventType {
-    PdnConnectionEvent(PdnConnectionInformation),
-    LocationReporting(LocationInfo),
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub enum EventKind {
+    PdnConnectionEvent,
+    LocationReporting,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub enum Event {
+    PdnConnectionEvent(Vec<PdnConnectionInformation>),
+    LocationReporting(Vec<LocationInfo>),
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LocationInfo {
     age_of_location_info: u32,
     cell_id: String,
@@ -24,6 +34,7 @@ pub struct LocationInfo {
     achieved_qos: MinorLocationQoS,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum GeographicArea {
     Point(Point),
     PointUncertainCircle,
@@ -35,8 +46,10 @@ pub enum GeographicArea {
 }
 
 //We do not care about this struct it should just be there i guess
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CivicAddress;
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum PositioningMethod {
     Cellid,
     Ecid,
@@ -55,6 +68,7 @@ pub enum PositioningMethod {
     NetworkSpecific,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum AccuracyFulfillmentIndicator {
     RequestedAccuracyFulfilled,
     RequestedAccuracyNotFulfilled,
@@ -63,6 +77,7 @@ pub enum AccuracyFulfillmentIndicator {
 //Based on spec this is way more complicated
 pub type VelocityEstimate = f64;
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum LdrType {
     UeAvailable,
     Periodic,
@@ -72,11 +87,13 @@ pub enum LdrType {
     Motion,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct MinorLocationQoS {
     h_accuracy: f64,
     v_accuracy: f64,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum PdnType {
     Ipv4,
     Ipv6,
@@ -85,20 +102,24 @@ pub enum PdnType {
     Ethernet,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum PdnConnectionStatus {
     CREATED,
     RELEASED,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum InterfaceIndication {
     ExposureFunction,
     PdnGateway,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct MacAddr {
     mac_addr48: String,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PdnConnectionInformation {
     status: PdnConnectionStatus,
     apn: String,
@@ -109,16 +130,50 @@ pub struct PdnConnectionInformation {
     mac_addrs: Vec<MacAddr>,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct MobileNetworkCoreEvent {
-    kind: EventType,
-    description: String,
+    kind: EventKind,
+    event: Event,
 }
 
-impl MobileNetworkCoreEvent {
-    pub fn new(kind: EventType, description: &str) -> Self {
-        MobileNetworkCoreEvent {
+#[derive(Clone, Debug)]
+pub struct EventSubscriber {
+    notify_endpoint: Url,
+    kind: EventKind,
+    user_ids: Vec<u32>,
+}
+
+impl Serialize for EventSubscriber {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut state = serializer.serialize_struct("EventSubscriber", 3)?;
+        state.serialize_field("notify_endpoint", &self.notify_endpoint.as_str())?;
+        state.serialize_field("kind", &self.kind)?;
+        state.serialize_field("user_ids", &self.user_ids)?;
+        state.end()
+    }
+}
+
+impl EventSubscriber {
+    pub fn new(notify_endpoint: Url, kind: EventKind, user_ids: Vec<u32>) -> Self {
+        EventSubscriber {
+            notify_endpoint,
             kind,
-            description: description.to_string(),
+            user_ids,
         }
+    }
+
+    pub fn get_event_type(&self) -> EventKind {
+        self.kind
+    }
+
+    pub fn get_notify_endpoint(&self) -> Url {
+        self.notify_endpoint
+    }
+
+    pub fn get_user_ids(&self) -> Vec<u32> {
+        self.user_ids
     }
 }

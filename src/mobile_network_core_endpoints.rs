@@ -5,7 +5,7 @@ use actix_web::{
 };
 use tokio::sync::RwLock;
 
-use crate::{mobile_network_core::MobileNetworkCore, user::User, ran::Ran};
+use crate::{mobile_network_core::MobileNetworkCore, user::User, ran::Ran, mobile_network_core_subscriber::EventSubscriber};
 
 pub struct MobileNetworkCoreWrapper {
     mobile_network_core: RwLock<MobileNetworkCore>,
@@ -52,6 +52,20 @@ pub async fn get_connected_users(
 #[post("/update_user_positions")]
 pub async fn update_user_positions(
     mobile_network_core_wrapper: Data<MobileNetworkCoreWrapper>,
+) -> impl Responder {
+    let mut mnc = mobile_network_core_wrapper
+        .mobile_network_core
+        .write()
+        .await;
+    mnc.try_connect_orphans();
+    mnc.update_user_positions();
+    "OK"
+}
+
+#[post("/subscribe")]
+pub async fn subscribe(
+    mobile_network_core_wrapper: Data<MobileNetworkCoreWrapper>,
+    event_subscription: Json<EventSubscriber>,
 ) -> impl Responder {
     let mut mnc = mobile_network_core_wrapper
         .mobile_network_core

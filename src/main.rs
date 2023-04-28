@@ -8,7 +8,6 @@ mod network;
 mod network_endpoints;
 mod pdu_session;
 mod ran;
-mod subscription;
 mod user;
 use std::{
     iter::repeat_with,
