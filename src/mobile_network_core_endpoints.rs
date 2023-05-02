@@ -6,8 +6,10 @@ use actix_web::{
 use tokio::sync::RwLock;
 
 use crate::{
-    mobile_network_core::MobileNetworkCore, mobile_network_core_event::EventSubscriber, ran::Ran,
-    user::User,
+    mobile_network_core::MobileNetworkCore,
+    mobile_network_core_event::{EventSubscriber, MobileNetworkCoreEvent},
+    ran::Ran,
+    user::User, pdu_session::PDUSession,
 };
 
 pub struct MobileNetworkCoreWrapper {
@@ -41,7 +43,7 @@ pub async fn get_users(
 pub async fn get_connected_users(
     mobile_network_core_wrapper: Data<MobileNetworkCoreWrapper>,
 ) -> impl Responder {
-    let users: Vec<User> = mobile_network_core_wrapper
+    let users: Vec<PDUSession> = mobile_network_core_wrapper
         .mobile_network_core
         .read()
         .await
@@ -76,6 +78,21 @@ pub async fn subscribe(
         .await;
     mnc.add_subscriber(event_subscription.into_inner());
     "OK"
+}
+
+#[get("/events")]
+pub async fn get_events(
+    mobile_network_core_wrapper: Data<MobileNetworkCoreWrapper>,
+) -> impl Responder {
+    let events: Vec<MobileNetworkCoreEvent> = mobile_network_core_wrapper
+        .mobile_network_core
+        .read()
+        .await
+        .get_events()
+        .into_iter()
+        .cloned()
+        .collect();
+    Json(events)
 }
 
 #[get("/rans")]

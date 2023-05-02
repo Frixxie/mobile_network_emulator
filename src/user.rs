@@ -19,7 +19,7 @@ impl Serialize for User {
     where
         S: serde::Serializer,
     {
-        let mut state = serializer.serialize_struct("User", 2)?;
+        let mut state = serializer.serialize_struct("User", 3)?;
         state.serialize_field("id", &self.id)?;
         state.serialize_field("x", &self.posititon.x())?;
         state.serialize_field("y", &self.posititon.y())?;
