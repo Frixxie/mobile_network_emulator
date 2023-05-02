@@ -46,7 +46,6 @@ impl Ran {
     pub fn get_current_connected_users(&self) -> Vec<&PDUSession> {
         self.connected_users
             .iter()
-            .map(|pdu_session| pdu_session)
             .collect()
     }
 

@@ -118,7 +118,6 @@ impl MobileNetworkCore {
         self.get_connected_users()
             .iter()
             .map(|pdu_session| pdu_session.user())
-            .into_iter()
             .chain(self.orphans.iter())
             .collect()
     }
