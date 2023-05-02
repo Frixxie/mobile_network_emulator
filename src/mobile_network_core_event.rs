@@ -1,8 +1,9 @@
 use std::net::{Ipv4Addr, Ipv6Addr};
+
 use url::Url;
 
 use geo::{Point, Polygon};
-use serde::{ser::SerializeStruct, Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum EventKind {
@@ -135,53 +136,31 @@ pub struct MobileNetworkCoreEvent {
     event: Event,
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct EventSubscriber {
-    notify_endpoint: Url,
+    notify_endpoint: String,
     kind: EventKind,
     user_ids: Vec<u32>,
-}
-
-impl Deserialize for Url {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        todo!()
-    }
-}
-
-impl Serialize for EventSubscriber {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        let mut state = serializer.serialize_struct("EventSubscriber", 3)?;
-        state.serialize_field("notify_endpoint", &self.notify_endpoint.as_str())?;
-        state.serialize_field("kind", &self.kind)?;
-        state.serialize_field("user_ids", &self.user_ids)?;
-        state.end()
-    }
 }
 
 impl EventSubscriber {
     pub fn new(notify_endpoint: Url, kind: EventKind, user_ids: Vec<u32>) -> Self {
         EventSubscriber {
-            notify_endpoint,
+            notify_endpoint: notify_endpoint.as_str().to_string(),
             kind,
             user_ids,
         }
     }
 
-    pub fn get_event_type(&self) -> EventKind {
-        self.kind
+    pub fn get_event_type(&self) -> &EventKind {
+        &self.kind
     }
 
     pub fn get_notify_endpoint(&self) -> Url {
-        self.notify_endpoint
+        Url::parse(&self.notify_endpoint).unwrap()
     }
 
-    pub fn get_user_ids(&self) -> Vec<u32> {
-        self.user_ids
+    pub fn get_user_ids(&self) -> Vec<&u32> {
+        self.user_ids.iter().collect()
     }
 }

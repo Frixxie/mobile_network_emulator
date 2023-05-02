@@ -3,8 +3,10 @@ use std::net::IpAddr;
 use geo::{Contains, Point};
 
 use crate::{
-    mobile_network_core_event::MobileNetworkCoreEvent,
-    mobile_network_core_event::EventSubscriber, pdu_session::PDUSession, ran::Ran, user::User,
+    mobile_network_core_event::{EventSubscriber, MobileNetworkCoreEvent},
+    pdu_session::PDUSession,
+    ran::Ran,
+    user::User,
 };
 
 pub struct MobileNetworkCore {

@@ -74,7 +74,7 @@ pub async fn subscribe(
         .mobile_network_core
         .write()
         .await;
-    mnc.add_subscriber(event_subscription);
+    mnc.add_subscriber(event_subscription.into_inner());
     "OK"
 }
 
