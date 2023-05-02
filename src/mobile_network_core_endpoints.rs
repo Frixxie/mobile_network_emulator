@@ -8,8 +8,9 @@ use tokio::sync::RwLock;
 use crate::{
     mobile_network_core::MobileNetworkCore,
     mobile_network_core_event::{EventSubscriber, MobileNetworkCoreEvent},
+    pdu_session::PDUSession,
     ran::Ran,
-    user::User, pdu_session::PDUSession,
+    user::User,
 };
 
 pub struct MobileNetworkCoreWrapper {
@@ -67,8 +68,9 @@ pub async fn update_user_positions(
     "OK"
 }
 
-#[post("/subscribe")]
-pub async fn subscribe(
+/// This function makes a subscriber subscribe to events
+#[post("/subscribers")]
+pub async fn post_subscribers(
     mobile_network_core_wrapper: Data<MobileNetworkCoreWrapper>,
     event_subscription: Json<EventSubscriber>,
 ) -> impl Responder {
@@ -78,6 +80,21 @@ pub async fn subscribe(
         .await;
     mnc.add_subscriber(event_subscription.into_inner());
     "OK"
+}
+
+#[get("/subscribers")]
+pub async fn get_subscribers(
+    mobile_network_core_wrapper: Data<MobileNetworkCoreWrapper>,
+) -> impl Responder {
+    let subscribers: Vec<EventSubscriber> = mobile_network_core_wrapper
+        .mobile_network_core
+        .read()
+        .await
+        .get_subscribers()
+        .into_iter()
+        .cloned()
+        .collect();
+    Json(subscribers)
 }
 
 #[get("/events")]

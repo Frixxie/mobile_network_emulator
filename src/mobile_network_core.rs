@@ -80,7 +80,7 @@ impl MobileNetworkCore {
 
     fn create_pdn_connection_event(ipv4_addr: Ipv4Addr) -> MobileNetworkCoreEvent {
         MobileNetworkCoreEvent::new(Event::PdnConnectionEvent(PdnConnectionInformation::new(
-            PdnConnectionStatus::CREATED,
+            PdnConnectionStatus::Created,
             PdnType::Ipv4,
             InterfaceIndication::ExposureFunction,
             ipv4_addr,
@@ -89,7 +89,7 @@ impl MobileNetworkCore {
 
     fn release_pdn_connection_event(ipv4_addr: Ipv4Addr) -> MobileNetworkCoreEvent {
         MobileNetworkCoreEvent::new(Event::PdnConnectionEvent(PdnConnectionInformation::new(
-            PdnConnectionStatus::RELEASED,
+            PdnConnectionStatus::Released,
             PdnType::Ipv4,
             InterfaceIndication::ExposureFunction,
             ipv4_addr,
@@ -126,7 +126,7 @@ impl MobileNetworkCore {
         self.event_subscribers.push(event_subscriber)
     }
 
-    pub fn get_subscrbers(&self) -> Vec<&EventSubscriber> {
+    pub fn get_subscribers(&self) -> Vec<&EventSubscriber> {
         self.event_subscribers.iter().collect()
     }
 

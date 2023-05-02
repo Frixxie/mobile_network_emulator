@@ -141,16 +141,16 @@ pub enum PdnType {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum PdnConnectionStatus {
-    CREATED,
-    RELEASED,
+    Created,
+    Released,
 }
 
 impl PdnConnectionStatus {
     pub fn created() -> PdnConnectionStatus {
-        Self::CREATED
+        Self::Created
     }
     pub fn released() -> PdnConnectionStatus {
-        Self::RELEASED
+        Self::Released
     }
 }
 
