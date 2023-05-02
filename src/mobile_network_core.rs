@@ -31,29 +31,6 @@ impl MobileNetworkCore {
         }
     }
 
-    /// Updates all users positions and places new orphans in orphans.
-    pub fn update_user_positions(&mut self) {
-        self.orphans.iter_mut().for_each(|user| {
-            user.next_pos();
-        });
-        let mut new_orphans = self
-            .rans
-            .iter_mut()
-            .flat_map(|ran| ran.update_connected_users())
-            .map(|pdu_session| {
-                let (user, ip_address) = pdu_session.release();
-                let v4addr = match ip_address {
-                    IpAddr::V4(v4addr) => v4addr,
-                    _ => unreachable!(),
-                };
-                self.events.push(Self::release_pdn_connection_event(v4addr));
-                self.available_ip_addresses.push(ip_address);
-                user
-            })
-            .collect();
-        self.orphans.append(&mut new_orphans);
-    }
-
     pub fn try_connect_orphans(&mut self) {
         let mut tmp_orphans = Vec::new();
         for user in self.orphans.drain(..) {
@@ -76,6 +53,29 @@ impl MobileNetworkCore {
             }
         }
         self.orphans = tmp_orphans;
+    }
+
+    /// Updates all users positions and places new orphans in orphans.
+    pub fn update_user_positions(&mut self) {
+        self.orphans.iter_mut().for_each(|user| {
+            user.next_pos();
+        });
+        let mut new_orphans = self
+            .rans
+            .iter_mut()
+            .flat_map(|ran| ran.update_connected_users())
+            .map(|pdu_session| {
+                let (user, ip_address) = pdu_session.release();
+                let v4addr = match ip_address {
+                    IpAddr::V4(v4addr) => v4addr,
+                    _ => unreachable!(),
+                };
+                self.events.push(Self::release_pdn_connection_event(v4addr));
+                self.available_ip_addresses.push(ip_address);
+                user
+            })
+            .collect();
+        self.orphans.append(&mut new_orphans);
     }
 
     fn create_pdn_connection_event(ipv4_addr: Ipv4Addr) -> MobileNetworkCoreEvent {
