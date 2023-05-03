@@ -1,9 +1,8 @@
 use geo::Point;
 use serde::{Serialize, ser::SerializeStruct};
 use std::net::IpAddr;
-use url::Url;
 
-use crate::{network::Network, user::User};
+use crate::user::User;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct PDUSession {
@@ -30,10 +29,6 @@ impl PDUSession {
 
     pub fn ip(&self) -> &IpAddr {
         &self.ip_address
-    }
-
-    pub fn use_application(&self, _url: Url, _network: Network) {
-        todo!();
     }
 }
 

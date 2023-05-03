@@ -1,4 +1,6 @@
-use std::{error::Error, fmt::Display};
+use std::{error::Error, fmt::Display, time::Duration};
+
+use geo::{EuclideanDistance, Point};
 
 use crate::{application::Application, edge_data_center::EdgeDataCenter};
 
@@ -33,7 +35,11 @@ impl Network {
     }
 
     //TODO: Change this to take in position as well
-    pub fn use_application(&mut self, application: &Application) -> Result<(), NetworkError> {
+    pub async fn use_application(
+        &mut self,
+        application: &Application,
+        ran_position: &Point,
+    ) -> Result<(), NetworkError> {
         match self
             .edge_data_centers
             .iter_mut()
@@ -41,6 +47,8 @@ impl Network {
         {
             Some(edge_data_center) => {
                 //We know that the edge data center has the application.
+                let delay = Self::generate_delay(&ran_position, edge_data_center.get_position());
+                tokio::time::sleep(delay).await;
                 let _usage = edge_data_center.use_application(application).unwrap();
                 Ok(())
             }
@@ -76,6 +84,11 @@ impl Network {
             None => None,
         }
     }
+
+    fn generate_delay(first_point: &Point, second_point: &Point) -> Duration {
+        let distance = first_point.euclidean_distance(second_point).abs();
+        Duration::new((distance * 2.0) as u64, 0)
+    }
 }
 
 #[cfg(test)]
@@ -97,8 +110,8 @@ mod tests {
         assert_eq!(network.edge_data_centers.len(), 32);
     }
 
-    #[test]
-    fn use_application() {
+    #[tokio::test]
+    async fn use_application() {
         let mut edge_data_centers: Vec<EdgeDataCenter> =
             repeat((0, "Fredrik's edge data center", Point::new(0.0, 0.0)))
                 .take(2)
@@ -108,13 +121,15 @@ mod tests {
         edge_data_centers[0].add_application(&application).unwrap();
         let mut network = Network::new(edge_data_centers);
 
-        let result = network.use_application(&application);
+        let result = network
+            .use_application(&application, &Point::new(1.0, 1.0))
+            .await;
 
         assert!(result.is_ok());
     }
 
-    #[test]
-    fn use_application_not_present_should_fail() {
+    #[tokio::test]
+    async fn use_application_not_present_should_fail() {
         let edge_data_centers: Vec<EdgeDataCenter> =
             repeat((0, "Fredrik's edge data center", Point::new(0.0, 0.0)))
                 .take(1)
@@ -124,7 +139,9 @@ mod tests {
 
         let mut network = Network::new(edge_data_centers);
 
-        let result = network.use_application(&application);
+        let result = network
+            .use_application(&application, &Point::new(1.0, 1.0))
+            .await;
 
         assert!(result.is_err());
     }

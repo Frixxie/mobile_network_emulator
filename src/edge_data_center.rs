@@ -93,6 +93,10 @@ impl EdgeDataCenter {
     pub fn get_applications(&self) -> Vec<&Application> {
         self.application_runtime.get_applications()
     }
+
+    pub fn get_position(&self) -> &Point {
+        &self.position
+    }
 }
 
 impl Serialize for EdgeDataCenter {
