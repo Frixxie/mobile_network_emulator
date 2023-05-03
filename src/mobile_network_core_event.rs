@@ -19,7 +19,7 @@ pub enum Event {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LocationInfo {
-    age_of_location_info: u32,
+    age_of_location_info: u64,
     cell_id: String,
     e_node_b_id: String,
     routing_area_id: String,
@@ -37,13 +37,8 @@ pub struct LocationInfo {
 
 impl LocationInfo {
     pub fn new(
-        age_of_location_info: u32,
-        cell_id: String,
+        age_of_location_info: u64,
         e_node_b_id: String,
-        routing_area_id: String,
-        tracking_area_id: String,
-        plmn_id: String,
-        twan_id: String,
         geographic_area: GeographicArea,
         civic_address: CivicAddress,
         position_method: Vec<PositioningMethod>,
@@ -54,12 +49,12 @@ impl LocationInfo {
     ) -> Self {
         Self {
             age_of_location_info,
-            cell_id,
+            cell_id: "see e_node_b_id".to_string(),
             e_node_b_id,
-            routing_area_id,
-            tracking_area_id,
-            plmn_id,
-            twan_id,
+            routing_area_id: "see e_node_b_id".to_string(),
+            tracking_area_id: "see e_node_b_id".to_string(),
+            plmn_id: "1".to_string(),
+            twan_id: "1".to_string(),
             geographic_area,
             civic_address,
             position_method,
@@ -88,7 +83,7 @@ pub struct CivicAddress;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum PositioningMethod {
-    Cellid,
+    CellId,
     Ecid,
     Otdoa,
     BarometricPressure,
@@ -128,6 +123,15 @@ pub enum LdrType {
 pub struct MinorLocationQoS {
     h_accuracy: f64,
     v_accuracy: f64,
+}
+
+impl MinorLocationQoS {
+    pub fn new(h_accuracy: f64, v_accuracy: f64) -> Self {
+        Self {
+            h_accuracy,
+            v_accuracy,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

@@ -8,14 +8,16 @@ use crate::{pdu_session::PDUSession, user::User};
 
 #[derive(Debug, Clone)]
 pub struct Ran {
+    id: u32,
     position: Point,
     radius: f64,
     connected_users: Vec<PDUSession>,
 }
 
 impl Ran {
-    pub fn new(position: Point, radius: f64) -> Self {
+    pub fn new(id: u32, position: Point, radius: f64) -> Self {
         Ran {
+            id,
             position,
             radius,
             connected_users: Vec::new(),
@@ -44,9 +46,7 @@ impl Ran {
     }
 
     pub fn get_current_connected_users(&self) -> Vec<&PDUSession> {
-        self.connected_users
-            .iter()
-            .collect()
+        self.connected_users.iter().collect()
     }
 
     pub fn get_mut_current_connected_users(&mut self) -> (&Point, Vec<&mut PDUSession>) {
@@ -59,6 +59,10 @@ impl Ran {
 
     pub fn connect_users(&mut self, mut users: Vec<PDUSession>) {
         self.connected_users.append(&mut users);
+    }
+
+    pub fn get_id(&self) -> u32 {
+        self.id
     }
 }
 
@@ -91,7 +95,7 @@ mod tests {
     #[test]
     fn connect_users() {
         let position = Point::new(0.5, 0.5);
-        let mut ran = Ran::new(position, 0.5);
+        let mut ran = Ran::new(1, position, 0.5);
         let pdu_sessions: Vec<PDUSession> = (0..32)
             .map(|i| {
                 PDUSession::new(
@@ -107,7 +111,7 @@ mod tests {
     #[test]
     fn connect_user() {
         let position = Point::new(0.5, 0.5);
-        let mut ran = Ran::new(position, 0.5);
+        let mut ran = Ran::new(1, position, 0.5);
         let pdu_sessions: Vec<PDUSession> = (0..32)
             .map(|i| {
                 PDUSession::new(
@@ -126,7 +130,7 @@ mod tests {
     #[test]
     fn contains() {
         let mut position = Point::new(0.5, 0.5);
-        let ran = Ran::new(position, 0.5);
+        let ran = Ran::new(1, position, 0.5);
         let mut usr = User::new(0, position, 1.0, &(-50.0..50.));
 
         let mut res = ran.contains(&usr);
@@ -142,7 +146,7 @@ mod tests {
     #[test]
     fn get_connected_users() {
         let position = Point::new(0.5, 0.5);
-        let mut ran = Ran::new(position, 0.5);
+        let mut ran = Ran::new(1, position, 0.5);
         let pdu_sessions: Vec<PDUSession> = (0..32)
             .map(|i| {
                 PDUSession::new(
@@ -159,7 +163,7 @@ mod tests {
     #[test]
     fn get_current_connected_users() {
         let position = Point::new(0.5, 0.5);
-        let mut ran = Ran::new(position, 0.5);
+        let mut ran = Ran::new(1, position, 0.5);
         let pdu_sessions: Vec<PDUSession> = (0..32)
             .map(|i| {
                 PDUSession::new(

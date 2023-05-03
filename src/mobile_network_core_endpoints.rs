@@ -65,6 +65,7 @@ pub async fn update_user_positions(
         .await;
     mnc.try_connect_orphans();
     mnc.update_user_positions();
+    mnc.generate_location_events();
     "OK"
 }
 

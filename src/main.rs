@@ -23,7 +23,8 @@ use edge_data_center::EdgeDataCenter;
 use geo::Point;
 use mobile_network_core::MobileNetworkCore;
 use mobile_network_core_endpoints::{
-    get_connected_users, get_rans, get_users, update_user_positions, MobileNetworkCoreWrapper, subscribe, get_events, get_subscribers, post_subscribers,
+    get_connected_users, get_events, get_rans, get_subscribers, get_users, post_subscribers,
+    update_user_positions, MobileNetworkCoreWrapper,
 };
 use network::Network;
 use network_endpoints::{
@@ -55,9 +56,10 @@ async fn main() -> std::io::Result<()> {
         .map(|(id, starting_point)| User::new(id, starting_point, user_velocdity, &range))
         .collect();
 
-    let rans = repeat_with(|| random_point(&mut rng, &range))
+    let rans = (0u32..)
         .take(num_rans)
-        .map(|point| Ran::new(point, 100.0))
+        .map(|id| (id, random_point(&mut rng, &range)))
+        .map(|(id, point)| Ran::new(id, point, 100.0))
         .collect();
 
     let ip_addresses = repeat_with(|| (rng.gen(), rng.gen(), rng.gen(), rng.gen()))
