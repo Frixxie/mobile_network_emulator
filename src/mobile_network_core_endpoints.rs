@@ -66,6 +66,7 @@ pub async fn update_user_positions(
     mnc.try_connect_orphans();
     mnc.update_user_positions();
     mnc.generate_location_events();
+    mnc.publish_events().await;
     "OK"
 }
 
@@ -93,6 +94,7 @@ pub async fn get_subscribers(
         .await
         .get_subscribers()
         .into_iter()
+        .map(|subscriber| subscriber.get_subscriber())
         .cloned()
         .collect();
     Json(subscribers)

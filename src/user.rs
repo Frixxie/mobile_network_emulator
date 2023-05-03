@@ -49,6 +49,10 @@ impl User {
         }
     }
 
+    pub fn get_id(&self) -> u32 {
+        self.id
+    }
+
     pub fn current_pos(&self) -> Point {
         self.posititon
     }

@@ -1,27 +1,52 @@
 use std::{
+    collections::HashSet,
     net::{IpAddr, Ipv4Addr},
     time::{SystemTime, UNIX_EPOCH},
 };
 
 use geo::{Contains, Point};
+use reqwest::Client;
+use serde::Serialize;
 
 use crate::{
     mobile_network_core_event::{
-        AccuracyFulfillmentIndicator, CivicAddress, Event, EventSubscriber, GeographicArea,
-        InterfaceIndication, LdrType, LocationInfo, MinorLocationQoS, MobileNetworkCoreEvent,
-        PdnConnectionInformation, PdnConnectionStatus, PdnType, PositioningMethod,
+        AccuracyFulfillmentIndicator, CivicAddress, Event,
+        EventKind::{LocationReporting, PdnConnectionEvent},
+        EventSubscriber, GeographicArea, InterfaceIndication, LdrType, LocationInfo,
+        MinorLocationQoS, MobileNetworkCoreEvent, PdnConnectionInformation, PdnConnectionStatus,
+        PdnType, PositioningMethod,
     },
     pdu_session::PDUSession,
     ran::Ran,
     user::User,
 };
 
+#[derive(Clone, Debug, Serialize)]
+pub struct Subscriber {
+    subscriber: EventSubscriber,
+    recieved_events: HashSet<MobileNetworkCoreEvent>,
+}
+
+impl Subscriber {
+    pub fn new(subscriber: EventSubscriber) -> Self {
+        Self {
+            subscriber,
+            recieved_events: HashSet::new(),
+        }
+    }
+
+    pub fn get_subscriber(&self) -> &EventSubscriber {
+        &self.subscriber
+    }
+}
+
 pub struct MobileNetworkCore {
     rans: Vec<Ran>,
     orphans: Vec<User>,
     available_ip_addresses: Vec<IpAddr>,
     events: Vec<MobileNetworkCoreEvent>,
-    event_subscribers: Vec<EventSubscriber>,
+    event_subscribers: Vec<Subscriber>,
+    http_client: Client,
 }
 
 impl MobileNetworkCore {
@@ -32,6 +57,7 @@ impl MobileNetworkCore {
             available_ip_addresses: ip_addesses,
             events: Vec::new(),
             event_subscribers: Vec::new(),
+            http_client: Client::new(),
         }
     }
 
@@ -50,13 +76,17 @@ impl MobileNetworkCore {
                         &ran.get_id().to_string(),
                         pdu_session.user().current_pos(),
                         LdrType::EnteringIntoArea,
+                        pdu_session.user().get_id(),
                     ));
-                    ran.connect_user(pdu_session);
                     let v4addr = match ip_address {
                         IpAddr::V4(v4addr) => v4addr,
                         _ => unreachable!(),
                     };
-                    self.events.push(Self::create_pdn_connection_event(v4addr));
+                    self.events.push(Self::create_pdn_connection_event(
+                        v4addr,
+                        pdu_session.user().get_id(),
+                    ));
+                    ran.connect_user(pdu_session);
                     break;
                 }
             }
@@ -84,8 +114,10 @@ impl MobileNetworkCore {
                     "Ups ran id is supposed to be here",
                     user.current_pos(),
                     LdrType::LeavingFromArea,
+                    user.get_id(),
                 ));
-                self.events.push(Self::release_pdn_connection_event(v4addr));
+                self.events
+                    .push(Self::release_pdn_connection_event(v4addr, user.get_id()));
                 self.available_ip_addresses.push(ip_address);
                 user
             })
@@ -106,6 +138,7 @@ impl MobileNetworkCore {
                         &ran.get_id().to_string(),
                         pdu_session.user().current_pos(),
                         LdrType::Motion,
+                        pdu_session.user().get_id(),
                     ));
                 }
             }
@@ -123,13 +156,6 @@ impl MobileNetworkCore {
             .collect()
     }
 
-    pub fn get_mut_pdu_sessions(&mut self) -> Vec<(&Point, Vec<&mut PDUSession>)> {
-        self.rans
-            .iter_mut()
-            .map(|ran| ran.get_mut_current_connected_users())
-            .collect()
-    }
-
     pub fn get_all_users(&self) -> Vec<&User> {
         self.get_connected_users()
             .iter()
@@ -139,15 +165,32 @@ impl MobileNetworkCore {
     }
 
     pub fn add_subscriber(&mut self, event_subscriber: EventSubscriber) {
-        self.event_subscribers.push(event_subscriber)
+        self.event_subscribers
+            .push(Subscriber::new(event_subscriber));
     }
 
-    pub fn get_subscribers(&self) -> Vec<&EventSubscriber> {
+    pub fn get_subscribers(&self) -> Vec<&Subscriber> {
         self.event_subscribers.iter().collect()
     }
 
-    pub fn publish_events(&self) {
-        todo!();
+    pub async fn publish_events(&mut self) {
+        for subscriber in self.event_subscribers.iter_mut() {
+            for event in self
+                .events
+                .iter()
+                .filter(|event| event.get_event_type() == subscriber.subscriber.get_event_type())
+            {
+                if !subscriber.recieved_events.contains(event) && subscriber.subscriber.get_user_ids().contains(&&event.get_user_id()) {
+                    self.http_client
+                        .post(subscriber.subscriber.get_notify_endpoint())
+                        .json::<MobileNetworkCoreEvent>(&event)
+                        .send()
+                        .await
+                        .unwrap();
+                    subscriber.recieved_events.insert(event.clone());
+                }
+            }
+        }
     }
 
     pub fn get_events(&self) -> Vec<&MobileNetworkCoreEvent> {
@@ -158,6 +201,7 @@ impl MobileNetworkCore {
         ran_id: &str,
         user_pos: Point,
         ldr_type: LdrType,
+        user_id: u32,
     ) -> MobileNetworkCoreEvent {
         let geophraphical_location = GeographicArea::Point(user_pos);
         let loc_info = LocationInfo::new(
@@ -174,25 +218,37 @@ impl MobileNetworkCore {
             ldr_type,
             MinorLocationQoS::new(1.0, 1.0),
         );
-        MobileNetworkCoreEvent::new(Event::LocationReporting(loc_info))
+        MobileNetworkCoreEvent::new(
+            Event::LocationReporting(loc_info),
+            LocationReporting,
+            user_id,
+        )
     }
 
-    fn create_pdn_connection_event(ipv4_addr: Ipv4Addr) -> MobileNetworkCoreEvent {
-        MobileNetworkCoreEvent::new(Event::PdnConnectionEvent(PdnConnectionInformation::new(
-            PdnConnectionStatus::Created,
-            PdnType::Ipv4,
-            InterfaceIndication::ExposureFunction,
-            ipv4_addr,
-        )))
+    fn create_pdn_connection_event(ipv4_addr: Ipv4Addr, user_id: u32) -> MobileNetworkCoreEvent {
+        MobileNetworkCoreEvent::new(
+            Event::PdnConnectionEvent(PdnConnectionInformation::new(
+                PdnConnectionStatus::Created,
+                PdnType::Ipv4,
+                InterfaceIndication::ExposureFunction,
+                ipv4_addr,
+            )),
+            PdnConnectionEvent,
+            user_id,
+        )
     }
 
-    fn release_pdn_connection_event(ipv4_addr: Ipv4Addr) -> MobileNetworkCoreEvent {
-        MobileNetworkCoreEvent::new(Event::PdnConnectionEvent(PdnConnectionInformation::new(
-            PdnConnectionStatus::Released,
-            PdnType::Ipv4,
-            InterfaceIndication::ExposureFunction,
-            ipv4_addr,
-        )))
+    fn release_pdn_connection_event(ipv4_addr: Ipv4Addr, user_id: u32) -> MobileNetworkCoreEvent {
+        MobileNetworkCoreEvent::new(
+            Event::PdnConnectionEvent(PdnConnectionInformation::new(
+                PdnConnectionStatus::Released,
+                PdnType::Ipv4,
+                InterfaceIndication::ExposureFunction,
+                ipv4_addr,
+            )),
+            PdnConnectionEvent,
+            user_id,
+        )
     }
 }
 
@@ -203,6 +259,7 @@ mod tests {
 
     use super::*;
     use geo::Point;
+    use url::Url;
 
     #[test]
     fn try_connect_orphans() {
@@ -234,5 +291,140 @@ mod tests {
 
         //verify
         assert_eq!(mn.orphans.len(), 1);
+    }
+
+    #[test]
+    fn generate_location_events() {
+        //setup
+        let position = Point::new(0.5, 0.5);
+        let ran = Ran::new(1, position, 0.5);
+        let usr = User::new(0, position, 1.0, &(-50.0..50.));
+        let ip_addesses = vec![IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1))];
+        let mut mn = MobileNetworkCore::new(vec![ran], vec![usr], ip_addesses);
+
+        //execute
+        mn.try_connect_orphans();
+        mn.generate_location_events();
+
+        //verify
+        assert_eq!(mn.events.len(), 3);
+    }
+
+    #[test]
+    fn get_rans() {
+        //setup
+        let position = Point::new(0.5, 0.5);
+        let ran = Ran::new(1, position, 0.5);
+        let usr = User::new(0, position, 1.0, &(-50.0..50.));
+        let ip_addesses = vec![IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1))];
+        let mn = MobileNetworkCore::new(vec![ran], vec![usr], ip_addesses);
+
+        //execute
+        let rans = mn.get_rans();
+
+        //verify
+        assert_eq!(rans.len(), 1);
+    }
+
+    #[test]
+    fn get_users() {
+        //setup
+        let position = Point::new(0.5, 0.5);
+        let ran = Ran::new(1, position, 0.5);
+        let usr = User::new(0, position, 1.0, &(-50.0..50.));
+        let ip_addesses = vec![IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1))];
+        let mn = MobileNetworkCore::new(vec![ran], vec![usr], ip_addesses);
+
+        //execute
+        let users = mn.get_all_users();
+
+        //verify
+        assert_eq!(users.len(), 1);
+    }
+
+    #[test]
+    fn get_connected_users() {
+        //setup
+        let position = Point::new(0.5, 0.5);
+        let ran = Ran::new(1, position, 0.5);
+        let usr = User::new(0, position, 1.0, &(-50.0..50.));
+        let ip_addesses = vec![IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1))];
+        let mut mn = MobileNetworkCore::new(vec![ran], vec![usr], ip_addesses);
+        mn.try_connect_orphans();
+
+        //execute
+        let users = mn.get_connected_users();
+
+        //verify
+        assert_eq!(users.len(), 1);
+    }
+
+    #[test]
+    fn add_subscriber() {
+        //setup
+        let position = Point::new(0.5, 0.5);
+        let ran = Ran::new(1, position, 0.5);
+        let usr = User::new(0, position, 1.0, &(-50.0..50.));
+        let ip_addesses = vec![IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1))];
+        let mut mn = MobileNetworkCore::new(vec![ran], vec![usr], ip_addesses);
+
+        let event_subscriber = EventSubscriber::new(
+            Url::parse("http://test:8080").unwrap(),
+            PdnConnectionEvent,
+            vec![1, 2, 3],
+        );
+
+        //execute
+        mn.add_subscriber(event_subscriber);
+
+        //verify
+        assert_eq!(mn.event_subscribers.len(), 1);
+    }
+
+    #[test]
+    fn get_subscribers() {
+        //setup
+        let position = Point::new(0.5, 0.5);
+        let ran = Ran::new(1, position, 0.5);
+        let usr = User::new(0, position, 1.0, &(-50.0..50.));
+        let ip_addesses = vec![IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1))];
+        let mut mn = MobileNetworkCore::new(vec![ran], vec![usr], ip_addesses);
+
+        let event_subscriber = EventSubscriber::new(
+            Url::parse("http://test:8080").unwrap(),
+            PdnConnectionEvent,
+            vec![1, 2, 3],
+        );
+
+        //execute
+        mn.add_subscriber(event_subscriber);
+
+        //verify
+        assert_eq!(mn.event_subscribers.len(), 1);
+
+        //execute
+        let subscribers = mn.get_subscribers();
+        assert_eq!(subscribers.len(), 1);
+    }
+
+    #[test]
+    fn get_events() {
+        //setup
+        let position = Point::new(0.5, 0.5);
+        let ran = Ran::new(1, position, 0.5);
+        let usr = User::new(0, position, 1.0, &(-50.0..50.));
+        let ip_addesses = vec![IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1))];
+        let mut mn = MobileNetworkCore::new(vec![ran], vec![usr], ip_addesses);
+
+        //execute
+        mn.try_connect_orphans();
+        mn.generate_location_events();
+
+        //verify
+        assert_eq!(mn.events.len(), 3);
+
+        //execute
+        let events = mn.get_events();
+        assert_eq!(events.len(), 3);
     }
 }

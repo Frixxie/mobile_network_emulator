@@ -1,23 +1,27 @@
-use std::net::{Ipv4Addr, Ipv6Addr};
+use std::{
+    hash::{Hash, Hasher},
+    net::{Ipv4Addr, Ipv6Addr},
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 use url::Url;
 
 use geo::{Point, Polygon};
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum EventKind {
     PdnConnectionEvent,
     LocationReporting,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Event {
     PdnConnectionEvent(PdnConnectionInformation),
     LocationReporting(LocationInfo),
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct LocationInfo {
     age_of_location_info: u64,
     cell_id: String,
@@ -33,6 +37,28 @@ pub struct LocationInfo {
     ue_velocity: VelocityEstimate,
     ldr_type: LdrType,
     achieved_qos: MinorLocationQoS,
+}
+
+impl Eq for LocationInfo {}
+
+impl Hash for LocationInfo {
+    fn hash<H>(&self, state: &mut H)
+    where
+        H: Hasher,
+    {
+        self.e_node_b_id.hash(state);
+        self.age_of_location_info.hash(state);
+        self.cell_id.hash(state);
+        self.routing_area_id.hash(state);
+        self.tracking_area_id.hash(state);
+        self.plmn_id.hash(state);
+        self.twan_id.hash(state);
+        self.geographic_area.hash(state);
+        self.civic_address.hash(state);
+        self.position_method.hash(state);
+        self.qos_fulfill_ind.hash(state);
+        self.ue_velocity.to_bits().hash(state);
+    }
 }
 
 impl LocationInfo {
@@ -66,7 +92,7 @@ impl LocationInfo {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum GeographicArea {
     Point(Point),
     PointUncertainCircle,
@@ -77,11 +103,35 @@ pub enum GeographicArea {
     EllipsoidArc,
 }
 
+impl Eq for GeographicArea {}
+
+impl Hash for GeographicArea {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        match self {
+            GeographicArea::Point(point) => {
+                point.x().to_bits().hash(state);
+                point.y().to_bits().hash(state);
+            }
+            GeographicArea::PointUncertainCircle => "PointUncertainCircle".hash(state),
+            GeographicArea::PointUncertaintyEllipse => "PointUncertaintyEllipse".hash(state),
+            GeographicArea::Polygon(polygon) => {
+                for point in polygon.exterior() {
+                    point.x.to_bits().hash(state);
+                    point.y.to_bits().hash(state);
+                }
+            }
+            GeographicArea::PointAltitude => "PointAltitude".hash(state),
+            GeographicArea::PointAlititudeUncertainity => "PointAlititudeUncertainity".hash(state),
+            GeographicArea::EllipsoidArc => "EllipsoidArc".hash(state),
+        }
+    }
+}
+
 //We do not care about this struct it should just be there i guess
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct CivicAddress;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum PositioningMethod {
     CellId,
     Ecid,
@@ -100,7 +150,7 @@ pub enum PositioningMethod {
     NetworkSpecific,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum AccuracyFulfillmentIndicator {
     RequestedAccuracyFulfilled,
     RequestedAccuracyNotFulfilled,
@@ -109,7 +159,7 @@ pub enum AccuracyFulfillmentIndicator {
 //Based on spec this is way more complicated
 pub type VelocityEstimate = f64;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum LdrType {
     UeAvailable,
     Periodic,
@@ -119,7 +169,7 @@ pub enum LdrType {
     Motion,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct MinorLocationQoS {
     h_accuracy: f64,
     v_accuracy: f64,
@@ -134,7 +184,7 @@ impl MinorLocationQoS {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum PdnType {
     Ipv4,
     Ipv6,
@@ -143,7 +193,7 @@ pub enum PdnType {
     Ethernet,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum PdnConnectionStatus {
     Created,
     Released,
@@ -158,7 +208,7 @@ impl PdnConnectionStatus {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum InterfaceIndication {
     ExposureFunction,
     PdnGateway,
@@ -173,7 +223,7 @@ impl InterfaceIndication {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct MacAddr {
     mac_addr48: String,
 }
@@ -186,7 +236,7 @@ impl Default for MacAddr {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct PdnConnectionInformation {
     status: PdnConnectionStatus,
     apn: String,
@@ -216,14 +266,33 @@ impl PdnConnectionInformation {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq, Hash)]
 pub struct MobileNetworkCoreEvent {
     event: Event,
+    kind: EventKind,
+    timestamp: u64,
+    user_id: u32,
 }
 
 impl MobileNetworkCoreEvent {
-    pub fn new(event: Event) -> Self {
-        Self { event }
+    pub fn new(event: Event, kind: EventKind, user_id: u32) -> Self {
+        Self {
+            event,
+            kind,
+            timestamp: SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
+            user_id,
+        }
+    }
+
+    pub fn get_event_type(&self) -> &EventKind {
+        &self.kind
+    }
+
+    pub fn get_user_id(&self) -> u32 {
+        self.user_id
     }
 }
 
