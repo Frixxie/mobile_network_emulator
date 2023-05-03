@@ -37,7 +37,7 @@ impl Network {
         match self
             .edge_data_centers
             .iter_mut()
-            .find(|edge_data_center| edge_data_center.contains_application(application.url()))
+            .find(|edge_data_center| edge_data_center.contains_application(application.id()))
         {
             Some(edge_data_center) => {
                 //We know that the edge data center has the application.
@@ -45,8 +45,8 @@ impl Network {
                 Ok(())
             }
             None => Err(NetworkError::new(&format!(
-                "Application on url {} does not exist",
-                application.url()
+                "Application with id {} does not exist",
+                application.id()
             ))),
         }
     }
@@ -84,7 +84,6 @@ mod tests {
     use std::iter::repeat;
 
     use geo::Point;
-    use url::Url;
 
     #[test]
     fn create() {
@@ -105,7 +104,7 @@ mod tests {
                 .take(2)
                 .map(|(id, name, position)| (EdgeDataCenter::new(id, name, position)))
                 .collect();
-        let application = Application::new(Url::parse("http://fasteraune.com").unwrap(), 0);
+        let application = Application::new(0);
         edge_data_centers[0].add_application(&application).unwrap();
         let mut network = Network::new(edge_data_centers);
 
@@ -121,7 +120,7 @@ mod tests {
                 .take(1)
                 .map(|(id, name, position)| (EdgeDataCenter::new(id, name, position)))
                 .collect();
-        let application = Application::new(Url::parse("http://fasteraune.com").unwrap(), 0);
+        let application = Application::new(0);
 
         let mut network = Network::new(edge_data_centers);
 

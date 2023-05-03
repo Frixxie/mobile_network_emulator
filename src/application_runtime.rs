@@ -3,8 +3,6 @@ use std::{
     fmt::{Display, Formatter},
 };
 
-use url::Url;
-
 use crate::application::Application;
 
 #[derive(Debug)]
@@ -42,7 +40,7 @@ impl ApplicationRuntime {
         &mut self,
         application: Application,
     ) -> Result<(), ApplicationRuntimeError> {
-        if self.contains_application(application.url()) {
+        if self.contains_application(application.id()) {
             return Err(ApplicationRuntimeError::new(
                 "Application already exists".to_string(),
             ));
@@ -56,7 +54,7 @@ impl ApplicationRuntime {
         application: &Application,
     ) -> Result<(), ApplicationRuntimeError> {
         for (i, current_application) in self.applications.iter_mut().enumerate() {
-            if current_application.0.url() == application.url() {
+            if current_application.0.id() == application.id() {
                 self.applications.remove(i);
                 return Ok(());
             }
@@ -71,7 +69,7 @@ impl ApplicationRuntime {
         application: &Application,
     ) -> Result<u32, ApplicationRuntimeError> {
         for current_application in self.applications.iter_mut() {
-            if current_application.0.url() == application.url() {
+            if current_application.0.id() == application.id() {
                 current_application.1 += 1;
                 return Ok(current_application.1);
             }
@@ -81,10 +79,10 @@ impl ApplicationRuntime {
         ))
     }
 
-    pub fn contains_application(&self, url: &Url) -> bool {
+    pub fn contains_application(&self, id: &u32) -> bool {
         self.applications
             .iter()
-            .filter(|(application, _usages)| application.url() == url)
+            .filter(|(application, _usages)| application.id() == id)
             .count()
             > 0
     }
@@ -108,7 +106,7 @@ mod tests {
     #[test]
     fn add_application() {
         let mut application_runtime = ApplicationRuntime::new();
-        let application = Application::new(Url::parse("https://fasteraune.com").unwrap(), 0);
+        let application = Application::new(0);
         application_runtime.add_application(application).unwrap();
         assert_eq!(application_runtime.applications.len(), 1);
     }
@@ -116,11 +114,11 @@ mod tests {
     #[test]
     fn add_same_application_two_times_should_fail() {
         let mut application_runtime = ApplicationRuntime::new();
-        let application = Application::new(Url::parse("https://fasteraune.com").unwrap(), 0);
+        let application = Application::new(0);
         application_runtime.add_application(application).unwrap();
         assert_eq!(application_runtime.applications.len(), 1);
 
-        let application = Application::new(Url::parse("https://fasteraune.com").unwrap(), 0);
+        let application = Application::new(0);
         let res = application_runtime.add_application(application);
         assert!(res.is_err());
         assert_eq!(application_runtime.applications.len(), 1);
@@ -129,7 +127,7 @@ mod tests {
     #[test]
     fn remove_application() {
         let mut application_runtime = ApplicationRuntime::new();
-        let application = Application::new(Url::parse("https://fasteraune.com").unwrap(), 0);
+        let application = Application::new(0);
         application_runtime
             .add_application(application.clone())
             .unwrap();
@@ -143,7 +141,7 @@ mod tests {
     #[test]
     fn remove_application_two_times() {
         let mut application_runtime = ApplicationRuntime::new();
-        let application = Application::new(Url::parse("https://fasteraune.com").unwrap(), 0);
+        let application = Application::new(0);
         application_runtime
             .add_application(application.clone())
             .unwrap();
@@ -160,7 +158,7 @@ mod tests {
     #[test]
     fn use_application() {
         let mut application_runtime = ApplicationRuntime::new();
-        let application = Application::new(Url::parse("https://fasteraune.com").unwrap(), 0);
+        let application = Application::new(0);
         application_runtime
             .add_application(application.clone())
             .unwrap();
@@ -175,7 +173,7 @@ mod tests {
     #[test]
     fn use_application_when_application_does_not_exsist() {
         let mut application_runtime = ApplicationRuntime::new();
-        let application = Application::new(Url::parse("https://fasteraune.com").unwrap(), 0);
+        let application = Application::new(0);
 
         let res = application_runtime.use_application(&application);
         assert!(res.is_err());
@@ -184,7 +182,7 @@ mod tests {
     #[test]
     fn num_applications() {
         let mut application_runtime = ApplicationRuntime::new();
-        let application = Application::new(Url::parse("https://fasteraune.com").unwrap(), 0);
+        let application = Application::new(0);
 
         assert_eq!(application_runtime.applications.len(), 0);
         assert_eq!(application_runtime.num_applications(), 0);

@@ -5,7 +5,6 @@ use std::{
 
 use geo::Point;
 use serde::{ser::SerializeStruct, Serialize};
-use url::Url;
 
 use crate::{application::Application, application_runtime::ApplicationRuntime};
 
@@ -53,13 +52,13 @@ impl EdgeDataCenter {
     pub fn add_application(
         &mut self,
         application: &Application,
-    ) -> Result<Url, EdgeDataCenterError> {
+    ) -> Result<u32, EdgeDataCenterError> {
         match self
             .application_runtime
             .add_application(application.clone())
             .map_err(|err| EdgeDataCenterError::new(format!("{}", err)))
         {
-            Ok(_) => Ok(application.url().clone()),
+            Ok(_) => Ok(application.id().clone()),
             Err(err) => Err(err),
         }
     }
@@ -87,8 +86,8 @@ impl EdgeDataCenter {
             .map_err(|err| EdgeDataCenterError::new(format!("{}", err)))
     }
 
-    pub fn contains_application(&self, url: &Url) -> bool {
-        self.application_runtime.contains_application(url)
+    pub fn contains_application(&self, id: &u32) -> bool {
+        self.application_runtime.contains_application(id)
     }
 
     pub fn get_applications(&self) -> Vec<&Application> {
@@ -124,7 +123,7 @@ mod tests {
     #[test]
     fn add_application() {
         let mut eds = EdgeDataCenter::new(0, "Fredrik's EdgeDataCenter", Point::new(0., 0.));
-        let application = Application::new(Url::parse("http://fasteraune.com").unwrap(), 0);
+        let application = Application::new(0);
         let res = eds.add_application(&application);
         assert!(res.is_ok());
         assert_eq!(eds.application_runtime.num_applications(), 1);
@@ -133,7 +132,7 @@ mod tests {
     #[test]
     fn add_application_already_present_should_fail() {
         let mut eds = EdgeDataCenter::new(0, "Fredrik's EdgeDataCenter", Point::new(0., 0.));
-        let application = Application::new(Url::parse("http://fasteraune.com").unwrap(), 0);
+        let application = Application::new(0);
         let mut res = eds.add_application(&application);
         assert!(res.is_ok());
         assert_eq!(eds.application_runtime.num_applications(), 1);
@@ -144,7 +143,7 @@ mod tests {
     #[test]
     fn remove_application() {
         let mut eds = EdgeDataCenter::new(0, "Fredrik's EdgeDataCenter", Point::new(0., 0.));
-        let application = Application::new(Url::parse("http://fasteraune.com").unwrap(), 0);
+        let application = Application::new(0);
         let res = eds.add_application(&application);
         assert!(res.is_ok());
         assert_eq!(eds.application_runtime.num_applications(), 1);
@@ -157,7 +156,7 @@ mod tests {
     #[test]
     fn remove_application_two_times() {
         let mut eds = EdgeDataCenter::new(0, "Fredrik's EdgeDataCenter", Point::new(0., 0.));
-        let application = Application::new(Url::parse("http://fasteraune.com").unwrap(), 0);
+        let application = Application::new(0);
         let res = eds.add_application(&application);
         assert!(res.is_ok());
         assert_eq!(eds.application_runtime.num_applications(), 1);
@@ -174,7 +173,7 @@ mod tests {
     #[test]
     fn use_application() {
         let mut eds = EdgeDataCenter::new(0, "Fredrik's EdgeDataCenter", Point::new(0., 0.));
-        let application = Application::new(Url::parse("http://fasteraune.com").unwrap(), 0);
+        let application = Application::new(0);
         let res = eds.add_application(&application);
 
         assert!(res.is_ok());
@@ -188,7 +187,7 @@ mod tests {
     #[test]
     fn use_application_no_application_should_fail() {
         let mut eds = EdgeDataCenter::new(0, "Fredrik's EdgeDataCenter", Point::new(0., 0.));
-        let application = Application::new(Url::parse("http://fasteraune.com").unwrap(), 0);
+        let application = Application::new(0);
 
         let res = eds.use_application(&application);
         assert!(res.is_err());
@@ -197,13 +196,13 @@ mod tests {
     #[test]
     fn contains_application() {
         let mut eds = EdgeDataCenter::new(0, "Fredrik's EdgeDataCenter", Point::new(0., 0.));
-        let application = Application::new(Url::parse("http://fasteraune.com").unwrap(), 0);
+        let application = Application::new(0);
         let res = eds.add_application(&application);
 
         assert!(res.is_ok());
         assert_eq!(eds.application_runtime.num_applications(), 1);
 
-        let res = eds.contains_application(&Url::parse("http://fasteraune.com").unwrap());
+        let res = eds.contains_application(&0);
         assert!(res);
     }
 
@@ -211,7 +210,7 @@ mod tests {
     fn not_contain_application() {
         let eds = EdgeDataCenter::new(0, "Fredrik's EdgeDataCenter", Point::new(0., 0.));
 
-        let res = eds.contains_application(&Url::parse("http://fasteraune.com").unwrap());
+        let res = eds.contains_application(&0);
         assert!(!res);
     }
 }

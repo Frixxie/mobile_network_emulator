@@ -1,9 +1,7 @@
 use actix_web::error::ErrorInternalServerError;
 use actix_web::web::{Data, Json, Path};
 use actix_web::{delete, get, post, Responder};
-use serde::Deserialize;
 use tokio::sync::RwLock;
-use url::Url;
 
 use crate::application::Application;
 
@@ -19,22 +17,6 @@ impl NetworkWrapper {
         NetworkWrapper {
             network: RwLock::new(network),
         }
-    }
-}
-
-#[derive(Debug, Deserialize)]
-pub struct ApplicationForm {
-    pub url: String,
-    pub id: u32,
-}
-
-impl From<ApplicationForm> for Application {
-    fn from(value: ApplicationForm) -> Self {
-        let url = match Url::parse(&value.url) {
-            Ok(url) => url,
-            Err(e) => panic!("{}", e),
-        };
-        Application::new(url, value.id)
     }
 }
 
@@ -73,7 +55,7 @@ pub async fn get_applications(
 pub async fn add_application(
     id: Path<u32>,
     network_wrapper: Data<NetworkWrapper>,
-    application: Json<ApplicationForm>,
+    application: Json<Application>,
 ) -> Result<impl Responder, actix_web::Error> {
     match network_wrapper
         .network
@@ -92,7 +74,7 @@ pub async fn add_application(
 pub async fn delete_application(
     id: Path<u32>,
     network_wrapper: Data<NetworkWrapper>,
-    application: Json<ApplicationForm>,
+    application: Json<Application>,
 ) -> Result<impl Responder, actix_web::Error> {
     match network_wrapper
         .network
