@@ -18,7 +18,7 @@ use crate::{
     },
     pdu_session::PDUSession,
     ran::Ran,
-    user::User,
+    user::User, network::Network,
 };
 
 #[derive(Clone, Debug, Serialize)]
@@ -143,6 +143,11 @@ impl MobileNetworkCore {
                 }
             }
         }
+    }
+
+    pub async fn use_some_applications(&self, network: &mut Network) {
+        let connected_users = self.get_connected_users();
+        let appliactions = network.get_applictions();
     }
 
     pub fn get_rans(&self) -> Vec<&Ran> {

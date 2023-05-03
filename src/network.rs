@@ -85,6 +85,13 @@ impl Network {
         }
     }
 
+    pub fn get_applictions(&self) -> Vec<&Application> {
+        self.edge_data_centers
+            .iter()
+            .flat_map(|edc| edc.get_applications())
+            .collect()
+    }
+
     fn generate_delay(first_point: &Point, second_point: &Point) -> Duration {
         let distance = first_point.euclidean_distance(second_point).abs();
         Duration::new((distance * 2.0) as u64, 0)
