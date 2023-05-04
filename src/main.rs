@@ -33,6 +33,7 @@ use network_endpoints::{
 };
 use ran::Ran;
 use rand::prelude::*;
+use simple_logger::SimpleLogger;
 use user::User;
 
 fn random_point(rng: &mut ThreadRng, range: &Range<f64>) -> Point {
@@ -43,6 +44,7 @@ fn random_point(rng: &mut ThreadRng, range: &Range<f64>) -> Point {
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
+    SimpleLogger::new().with_level(log::LevelFilter::Info).init().unwrap();
     let range = -500.0..500.;
     let num_users = 32;
     let user_velocdity = 1.5;

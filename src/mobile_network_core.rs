@@ -5,6 +5,7 @@ use std::{
 };
 
 use geo::{Contains, Point};
+use log::info;
 use rand::seq::SliceRandom;
 use reqwest::Client;
 use serde::Serialize;
@@ -155,11 +156,11 @@ impl MobileNetworkCore {
             let application = match applications.choose(&mut rand::thread_rng()) {
                 Some(application) => application,
                 None => {
-                    println!("The application list is empty there is no application accessed for user with ip: {}", user.ip());
+                    info!("The application list is empty there is no application accessed for user with ip: {}", user.ip());
                     break;
                 }
             };
-            println!("User with id {} and ip {} is using application {}", user.user().get_id(), user.ip(), application.id());
+            info!("User with id {} and ip {} is using application {}", user.user().get_id(), user.ip(), application.id());
             network
                 .use_application(user, &application, &user.get_ran().get_position())
                 .await
