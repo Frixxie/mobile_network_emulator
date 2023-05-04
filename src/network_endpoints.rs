@@ -88,3 +88,35 @@ pub async fn delete_application(
         Err(err) => Err(ErrorInternalServerError(err)),
     }
 }
+
+#[get("/edge_data_centers/{edc_id}/applications/{application_id}/total_usages")]
+pub async fn get_total_application_usage(
+    edc_id: Path<u32>,
+    application_id: Path<u32>,
+    network_wrapper: Data<NetworkWrapper>,
+) -> impl Responder {
+    Json(
+        network_wrapper
+            .network
+            .read()
+            .await
+            .get_total_application_usage(*edc_id, *application_id)
+            .unwrap(),
+    )
+}
+
+#[get("/edge_data_centers/{edc_id}/applications/{application_id}/total_usages")]
+pub async fn get_application_usage(
+    edc_id: Path<u32>,
+    application_id: Path<u32>,
+    network_wrapper: Data<NetworkWrapper>,
+) -> impl Responder {
+    Json(
+        network_wrapper
+            .network
+            .read()
+            .await
+            .get_application_usage(*edc_id, *application_id)
+            .unwrap(),
+    )
+}

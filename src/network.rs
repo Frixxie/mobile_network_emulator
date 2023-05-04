@@ -95,6 +95,22 @@ impl Network {
             .collect()
     }
 
+    pub fn get_total_application_usage(
+        &self,
+        _edc_id: u32,
+        _application_id: u32,
+    ) -> Result<u32, NetworkError> {
+        Ok(1)
+    }
+
+    pub fn get_application_usage(
+        &self,
+        _edc_id: u32,
+        _application_id: u32,
+    ) -> Result<u32, NetworkError> {
+        Ok(1)
+    }
+
     fn generate_delay(first_point: &Point, second_point: &Point) -> Duration {
         let distance = first_point.euclidean_distance(second_point).abs();
         Duration::new((distance * 2.0) as u64, 0)
