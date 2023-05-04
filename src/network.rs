@@ -37,7 +37,7 @@ impl Network {
     //TODO: Change this to take in position as well
     pub async fn use_application(
         &mut self,
-        _user: &PDUSession,
+        user: &PDUSession,
         application: &Application,
         ran_position: &Point,
     ) -> Result<(), NetworkError> {
@@ -50,7 +50,7 @@ impl Network {
                 //We know that the edge data center has the application.
                 // let delay = Self::generate_delay(&ran_position, edge_data_center.get_position());
                 // tokio::time::sleep(delay).await;
-                let _usage = edge_data_center.use_application(application).unwrap();
+                let _usage = edge_data_center.use_application(*user.ip(), application).unwrap();
                 Ok(())
             }
             None => Err(NetworkError::new(&format!(

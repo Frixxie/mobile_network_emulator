@@ -1,6 +1,7 @@
 use std::{
     error::Error,
     fmt::{Display, Formatter},
+    net::IpAddr,
 };
 
 use geo::Point;
@@ -79,10 +80,11 @@ impl EdgeDataCenter {
 
     pub fn use_application(
         &mut self,
+        ip_addr: IpAddr,
         application: &Application,
     ) -> Result<u32, EdgeDataCenterError> {
         self.application_runtime
-            .use_application(application)
+            .use_application(ip_addr, application)
             .map_err(|err| EdgeDataCenterError::new(format!("{}", err)))
     }
 
@@ -115,6 +117,8 @@ impl Serialize for EdgeDataCenter {
 
 #[cfg(test)]
 mod tests {
+    use std::net::Ipv4Addr;
+
     use super::*;
 
     #[test]
@@ -183,7 +187,8 @@ mod tests {
         assert!(res.is_ok());
         assert_eq!(eds.application_runtime.num_applications(), 1);
 
-        let res = eds.use_application(&application);
+        let ip_addr = IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1));
+        let res = eds.use_application(ip_addr, &application);
         assert!(res.is_ok());
         assert_eq!(res.unwrap(), 1);
     }
@@ -192,8 +197,9 @@ mod tests {
     fn use_application_no_application_should_fail() {
         let mut eds = EdgeDataCenter::new(0, "Fredrik's EdgeDataCenter", Point::new(0., 0.));
         let application = Application::new(0);
+        let ip_addr = IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1));
 
-        let res = eds.use_application(&application);
+        let res = eds.use_application(ip_addr, &application);
         assert!(res.is_err());
     }
 

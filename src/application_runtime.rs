@@ -1,6 +1,7 @@
 use std::{
     error::Error,
     fmt::{Display, Formatter},
+    net::IpAddr,
 };
 
 use crate::application::Application;
@@ -26,7 +27,7 @@ impl Error for ApplicationRuntimeError {}
 
 #[derive(Debug, Clone)]
 pub struct ApplicationRuntime {
-    applications: Vec<(Application, u32)>,
+    applications: Vec<Application>,
 }
 
 impl ApplicationRuntime {
@@ -45,7 +46,7 @@ impl ApplicationRuntime {
                 "Application already exists".to_string(),
             ));
         }
-        self.applications.push((application, 0));
+        self.applications.push(application);
         Ok(())
     }
 
@@ -54,7 +55,7 @@ impl ApplicationRuntime {
         application: &Application,
     ) -> Result<(), ApplicationRuntimeError> {
         for (i, current_application) in self.applications.iter_mut().enumerate() {
-            if current_application.0.id() == application.id() {
+            if current_application.id() == application.id() {
                 self.applications.remove(i);
                 return Ok(());
             }
@@ -66,12 +67,13 @@ impl ApplicationRuntime {
 
     pub fn use_application(
         &mut self,
+        ip_addr: IpAddr,
         application: &Application,
     ) -> Result<u32, ApplicationRuntimeError> {
         for current_application in self.applications.iter_mut() {
-            if current_application.0.id() == application.id() {
-                current_application.1 += 1;
-                return Ok(current_application.1);
+            if current_application.id() == application.id() {
+                current_application.add_use(ip_addr);
+                return Ok(current_application.get_use(&ip_addr));
             }
         }
         Err(ApplicationRuntimeError::new(
@@ -80,11 +82,14 @@ impl ApplicationRuntime {
     }
 
     pub fn contains_application(&self, id: &u32) -> bool {
-        self.applications
+        match self
+            .applications
             .iter()
-            .filter(|(application, _usages)| application.id() == id)
-            .count()
-            > 0
+            .find(|application| application.id() == id)
+        {
+            Some(_) => true,
+            None => false,
+        }
     }
 
     pub fn num_applications(&self) -> usize {
@@ -94,13 +99,15 @@ impl ApplicationRuntime {
     pub fn get_applications(&self) -> Vec<&Application> {
         self.applications
             .iter()
-            .map(|(appliaction, _id)| appliaction)
+            .map(|appliaction| appliaction)
             .collect()
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use std::net::Ipv4Addr;
+
     use super::*;
 
     #[test]
@@ -165,8 +172,12 @@ mod tests {
 
         assert_eq!(application_runtime.applications.len(), 1);
 
-        application_runtime.use_application(&application).unwrap();
-        let application_use = application_runtime.applications.iter().last().unwrap().1;
+        let ip_addr = IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1));
+
+        application_runtime
+            .use_application(ip_addr, &application)
+            .unwrap();
+        let application_use = application_runtime.get_applications()[0].get_use(&ip_addr);
         assert_eq!(application_use, 1);
     }
 
@@ -175,7 +186,9 @@ mod tests {
         let mut application_runtime = ApplicationRuntime::new();
         let application = Application::new(0);
 
-        let res = application_runtime.use_application(&application);
+        let ip_addr = IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1));
+
+        let res = application_runtime.use_application(ip_addr, &application);
         assert!(res.is_err());
     }
 
