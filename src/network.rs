@@ -101,8 +101,10 @@ impl Network {
 
 #[cfg(test)]
 mod tests {
+    use crate::{ran::Ran, user::User};
+
     use super::*;
-    use std::iter::repeat;
+    use std::{iter::repeat, net::Ipv4Addr};
 
     use geo::Point;
 
@@ -126,11 +128,18 @@ mod tests {
                 .map(|(id, name, position)| (EdgeDataCenter::new(id, name, position)))
                 .collect();
         let application = Application::new(0);
+        let ran = Ran::new(0, Point::new(1.0, 1.0), 50.0);
+        let user = User::new(0, Point::new(1.0, 1.0), 1.0, &(-1.0..1.0));
+        let pdu_session = PDUSession::new(
+            user,
+            std::net::IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+            &ran,
+        );
         edge_data_centers[0].add_application(&application).unwrap();
         let mut network = Network::new(edge_data_centers);
 
         let result = network
-            .use_application(&application, &Point::new(1.0, 1.0))
+            .use_application(&pdu_session, &application, &Point::new(1.0, 1.0))
             .await;
 
         assert!(result.is_ok());
@@ -146,9 +155,16 @@ mod tests {
         let application = Application::new(0);
 
         let mut network = Network::new(edge_data_centers);
+        let ran = Ran::new(0, Point::new(1.0, 1.0), 50.0);
+        let user = User::new(0, Point::new(1.0, 1.0), 1.0, &(-1.0..1.0));
+        let pdu_session = PDUSession::new(
+            user,
+            std::net::IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+            &ran,
+        );
 
         let result = network
-            .use_application(&application, &Point::new(1.0, 1.0))
+            .use_application(&pdu_session, &application, &Point::new(1.0, 1.0))
             .await;
 
         assert!(result.is_err());
