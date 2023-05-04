@@ -5,10 +5,12 @@ use std::{
 };
 
 use geo::{Contains, Point};
+use rand::seq::SliceRandom;
 use reqwest::Client;
 use serde::Serialize;
 
 use crate::{
+    application::Application,
     mobile_network_core_event::{
         AccuracyFulfillmentIndicator, CivicAddress, Event,
         EventKind::{LocationReporting, PdnConnectionEvent},
@@ -16,9 +18,10 @@ use crate::{
         MinorLocationQoS, MobileNetworkCoreEvent, PdnConnectionInformation, PdnConnectionStatus,
         PdnType, PositioningMethod,
     },
+    network::Network,
     pdu_session::PDUSession,
     ran::Ran,
-    user::User, network::Network,
+    user::User,
 };
 
 #[derive(Clone, Debug, Serialize)]
@@ -71,7 +74,7 @@ impl MobileNetworkCore {
                         Some(ip_address) => ip_address,
                         None => unreachable!(),
                     };
-                    let pdu_session = PDUSession::new(tmp_orphans.pop().unwrap(), ip_address);
+                    let pdu_session = PDUSession::new(tmp_orphans.pop().unwrap(), ip_address, &ran);
                     self.events.push(Self::create_location_reporting_event(
                         &ran.get_id().to_string(),
                         pdu_session.user().current_pos(),
@@ -131,23 +134,37 @@ impl MobileNetworkCore {
             .iter()
             .flat_map(|ran| ran.get_current_connected_users())
             .collect();
-        for ran in self.rans.iter() {
-            for pdu_session in connected_users.iter() {
-                if ran.contains(pdu_session.user()) {
-                    self.events.push(Self::create_location_reporting_event(
-                        &ran.get_id().to_string(),
-                        pdu_session.user().current_pos(),
-                        LdrType::Motion,
-                        pdu_session.user().get_id(),
-                    ));
-                }
-            }
+        for pdu_session in connected_users.iter() {
+            self.events.push(Self::create_location_reporting_event(
+                &pdu_session.get_ran().get_id().to_string(),
+                pdu_session.user().current_pos(),
+                LdrType::Motion,
+                pdu_session.user().get_id(),
+            ));
         }
     }
 
     pub async fn use_some_applications(&self, network: &mut Network) {
         let connected_users = self.get_connected_users();
-        let appliactions = network.get_applictions();
+        let some_users =
+            connected_users.choose_multiple(&mut rand::thread_rng(), connected_users.len() / 2);
+        let applications: Vec<Application> =
+            network.get_applictions().into_iter().cloned().collect();
+
+        for user in some_users {
+            let application = match applications.choose(&mut rand::thread_rng()) {
+                Some(application) => application,
+                None => {
+                    println!("The application list is empty there is no application accessed for user with ip: {}", user.ip());
+                    break;
+                }
+            };
+            println!("User with id {} and ip {} is using application {}", user.user().get_id(), user.ip(), application.id());
+            network
+                .use_application(user, &application, &user.get_ran().get_position())
+                .await
+                .unwrap();
+        }
     }
 
     pub fn get_rans(&self) -> Vec<&Ran> {
@@ -185,7 +202,12 @@ impl MobileNetworkCore {
                 .iter()
                 .filter(|event| event.get_event_type() == subscriber.subscriber.get_event_type())
             {
-                if !subscriber.recieved_events.contains(event) && subscriber.subscriber.get_user_ids().contains(&&event.get_user_id()) {
+                if !subscriber.recieved_events.contains(event)
+                    && subscriber
+                        .subscriber
+                        .get_user_ids()
+                        .contains(&&event.get_user_id())
+                {
                     self.http_client
                         .post(subscriber.subscriber.get_notify_endpoint())
                         .json::<MobileNetworkCoreEvent>(&event)

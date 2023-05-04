@@ -19,6 +19,7 @@ use actix_web::{
     web::{self, Data},
     App, HttpServer,
 };
+use application::Application;
 use edge_data_center::EdgeDataCenter;
 use geo::Point;
 use mobile_network_core::MobileNetworkCore;
@@ -47,6 +48,7 @@ async fn main() -> std::io::Result<()> {
     let user_velocdity = 1.5;
     let num_rans = 16;
     let num_edge_data_centers = 8;
+    let num_applications = 8;
 
     let mut rng = rand::thread_rng();
 
@@ -69,17 +71,26 @@ async fn main() -> std::io::Result<()> {
         })
         .collect();
 
+    let applications: Vec<Application> = (0..num_applications)
+        .into_iter()
+        .map(|id| Application::new(id))
+        .collect();
+
     let mnc = MobileNetworkCore::new(rans, users, ip_addresses);
     let mnc_wrapper = MobileNetworkCoreWrapper::new(mnc);
     let mnc_wrapper_data = Data::new(mnc_wrapper);
 
-    let edge_data_centers: Vec<EdgeDataCenter> = (0u32..)
+    let mut edge_data_centers: Vec<EdgeDataCenter> = (0u32..)
         .take(num_edge_data_centers)
         .map(|id| (id, random_point(&mut rng, &range)))
         .map(|(id, starting_point)| {
             EdgeDataCenter::new(id, &format!("edc: {}", id), starting_point)
         })
         .collect();
+
+    for application in applications {
+        edge_data_centers[0].add_application(&application).unwrap();
+    }
 
     let network = Network::new(edge_data_centers);
     let network_wrapper = NetworkWrapper::new(network);
@@ -93,8 +104,7 @@ async fn main() -> std::io::Result<()> {
                     .service(get_edge_data_centers)
                     .service(get_applications)
                     .service(add_application)
-                    .service(delete_application)
-                    .app_data(network_wrapper_data.clone()),
+                    .service(delete_application),
             )
             .service(
                 web::scope("/mobile_network")
@@ -104,9 +114,10 @@ async fn main() -> std::io::Result<()> {
                     .service(get_events)
                     .service(get_subscribers)
                     .service(post_subscribers)
-                    .service(update_user_positions)
-                    .app_data(mnc_wrapper_data.clone()),
+                    .service(update_user_positions),
             )
+            .app_data(network_wrapper_data.clone())
+            .app_data(mnc_wrapper_data.clone())
             .wrap(cors)
     })
     .bind(("127.0.0.1", 8080))?

@@ -2,7 +2,7 @@ use std::{error::Error, fmt::Display, time::Duration};
 
 use geo::{EuclideanDistance, Point};
 
-use crate::{application::Application, edge_data_center::EdgeDataCenter};
+use crate::{application::Application, edge_data_center::EdgeDataCenter, pdu_session::PDUSession};
 
 #[derive(Debug)]
 pub struct NetworkError {
@@ -37,6 +37,7 @@ impl Network {
     //TODO: Change this to take in position as well
     pub async fn use_application(
         &mut self,
+        _user: &PDUSession,
         application: &Application,
         ran_position: &Point,
     ) -> Result<(), NetworkError> {
@@ -47,8 +48,8 @@ impl Network {
         {
             Some(edge_data_center) => {
                 //We know that the edge data center has the application.
-                let delay = Self::generate_delay(&ran_position, edge_data_center.get_position());
-                tokio::time::sleep(delay).await;
+                // let delay = Self::generate_delay(&ran_position, edge_data_center.get_position());
+                // tokio::time::sleep(delay).await;
                 let _usage = edge_data_center.use_application(application).unwrap();
                 Ok(())
             }

@@ -6,7 +6,7 @@ use serde::Serialize;
 
 use crate::{pdu_session::PDUSession, user::User};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Ran {
     id: u32,
     position: Point,
@@ -24,7 +24,7 @@ impl Ran {
         }
     }
 
-    pub fn get_connected_users(&mut self) -> Vec<PDUSession> {
+    fn get_connected_users(&mut self) -> Vec<PDUSession> {
         self.connected_users.drain(..).collect()
     }
 
@@ -64,6 +64,10 @@ impl Ran {
     pub fn get_id(&self) -> u32 {
         self.id
     }
+
+    pub fn get_position(&self) -> Point {
+        self.position
+    }
 }
 
 impl Contains<User> for Ran {
@@ -77,7 +81,8 @@ impl Serialize for Ran {
     where
         S: serde::Serializer,
     {
-        let mut state = serializer.serialize_struct("Ran", 3)?;
+        let mut state = serializer.serialize_struct("Ran", 4)?;
+        state.serialize_field("id", &self.id)?;
         state.serialize_field("x", &self.position.x())?;
         state.serialize_field("y", &self.position.y())?;
         state.serialize_field("radius", &self.radius)?;
@@ -101,6 +106,7 @@ mod tests {
                 PDUSession::new(
                     User::new(i, position, 1., &(-50.0..50.)),
                     IpAddr::V4(Ipv4Addr::LOCALHOST),
+                    &ran,
                 )
             })
             .collect();
@@ -117,6 +123,7 @@ mod tests {
                 PDUSession::new(
                     User::new(i, position, 1., &(-50.0..50.)),
                     IpAddr::V4(Ipv4Addr::LOCALHOST),
+                    &ran,
                 )
             })
             .collect();
@@ -152,6 +159,7 @@ mod tests {
                 PDUSession::new(
                     User::new(i, position, 1., &(-50.0..50.0)),
                     IpAddr::V4(Ipv4Addr::LOCALHOST),
+                    &ran,
                 )
             })
             .collect();
@@ -169,6 +177,7 @@ mod tests {
                 PDUSession::new(
                     User::new(i, position, 1., &(-50.0..50.)),
                     IpAddr::V4(Ipv4Addr::LOCALHOST),
+                    &ran,
                 )
             })
             .collect();

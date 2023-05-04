@@ -9,7 +9,7 @@ use crate::edge_data_center::EdgeDataCenter;
 use crate::network::Network;
 
 pub struct NetworkWrapper {
-    network: RwLock<Network>,
+    pub network: RwLock<Network>,
 }
 
 impl NetworkWrapper {

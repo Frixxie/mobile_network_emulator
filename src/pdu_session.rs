@@ -1,18 +1,23 @@
 use geo::Point;
-use serde::{Serialize, ser::SerializeStruct};
-use std::net::IpAddr;
+use serde::{ser::SerializeStruct, Serialize};
+use std::{net::IpAddr, sync::Arc};
 
-use crate::user::User;
+use crate::{ran::Ran, user::User};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct PDUSession {
     user: User,
     ip_address: IpAddr,
+    ran: Arc<Ran>,
 }
 
 impl PDUSession {
-    pub fn new(user: User, ip_address: IpAddr) -> Self {
-        PDUSession { user, ip_address }
+    pub fn new(user: User, ip_address: IpAddr, ran: &Ran) -> Self {
+        PDUSession {
+            user,
+            ip_address,
+            ran: Arc::new(ran.clone()),
+        }
     }
 
     pub fn release(self) -> (User, IpAddr) {
@@ -30,16 +35,21 @@ impl PDUSession {
     pub fn ip(&self) -> &IpAddr {
         &self.ip_address
     }
+
+    pub fn get_ran(&self) -> Arc<Ran> {
+        self.ran.clone()
+    }
 }
 
-impl Serialize for PDUSession {
+impl<'a> Serialize for PDUSession {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
     {
-        let mut state = serializer.serialize_struct("PDUSession", 2)?;
+        let mut state = serializer.serialize_struct("PDUSession", 3)?;
         state.serialize_field("user", &self.user())?;
         state.serialize_field("ip", &self.ip())?;
+        state.serialize_field("ran", &self.ran.get_id())?;
         state.end()
     }
 }
@@ -54,8 +64,9 @@ mod tests {
     fn create_release() {
         let user = User::new(1, Point::new(50.0, 50.0), 1.5, &(-50.0..50.0));
         let ip_address = Ipv4Addr::LOCALHOST;
+        let ran = Ran::new(0, Point::new(0.0, 0.0), 100.0);
 
-        let pbu_session = PDUSession::new(user, std::net::IpAddr::V4(ip_address));
+        let pbu_session = PDUSession::new(user, std::net::IpAddr::V4(ip_address), &ran);
         let (user_1, ip_address_1) = pbu_session.release();
         assert_eq!(
             User::new(1, Point::new(50.0, 50.0), 1.5, &(-50.0..50.0)),

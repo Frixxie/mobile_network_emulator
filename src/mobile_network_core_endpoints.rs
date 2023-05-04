@@ -8,6 +8,7 @@ use tokio::sync::RwLock;
 use crate::{
     mobile_network_core::MobileNetworkCore,
     mobile_network_core_event::{EventSubscriber, MobileNetworkCoreEvent},
+    network_endpoints::NetworkWrapper,
     pdu_session::PDUSession,
     ran::Ran,
     user::User,
@@ -58,7 +59,9 @@ pub async fn get_connected_users(
 #[post("/update_user_positions")]
 pub async fn update_user_positions(
     mobile_network_core_wrapper: Data<MobileNetworkCoreWrapper>,
+    network_wrapper: Data<NetworkWrapper>,
 ) -> impl Responder {
+    let mut network = network_wrapper.network.write().await;
     let mut mnc = mobile_network_core_wrapper
         .mobile_network_core
         .write()
@@ -67,6 +70,7 @@ pub async fn update_user_positions(
     mnc.update_user_positions();
     mnc.generate_location_events();
     mnc.publish_events().await;
+    mnc.use_some_applications(&mut network).await;
     "OK"
 }
 
