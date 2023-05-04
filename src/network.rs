@@ -97,18 +97,56 @@ impl Network {
 
     pub fn get_total_application_usage(
         &self,
-        _edc_id: u32,
-        _application_id: u32,
+        edc_id: u32,
+        application_id: u32,
     ) -> Result<u32, NetworkError> {
-        Ok(1)
+        let edc = match self
+            .edge_data_centers
+            .iter()
+            .find(|edc| edc.get_id() == edc_id)
+        {
+            Some(edc) => edc,
+            None => {
+                return Err(NetworkError::new(&format!(
+                    "Edge data center with id {} does not exist",
+                    edc_id
+                )))
+            }
+        };
+        edc.get_total_uses_of_application(application_id)
+            .map_err(|_| {
+                NetworkError::new(&format!(
+                    "Application with id {} does not exist",
+                    application_id
+                ))
+            })
     }
 
     pub fn get_application_usage(
         &self,
-        _edc_id: u32,
-        _application_id: u32,
+        edc_id: u32,
+        application_id: u32,
     ) -> Result<u32, NetworkError> {
-        Ok(1)
+        let edc = match self
+            .edge_data_centers
+            .iter()
+            .find(|edc| edc.get_id() == edc_id)
+        {
+            Some(edc) => edc,
+            None => {
+                return Err(NetworkError::new(&format!(
+                    "Edge data center with id {} does not exist",
+                    edc_id
+                )))
+            }
+        };
+        edc.dump_current_uses_of_appliaction(application_id)
+            .map_err(|_| {
+                NetworkError::new(&format!(
+                    "Application with id {} does not exist",
+                    application_id
+                ))
+            })
     }
 
     fn generate_delay(first_point: &Point, second_point: &Point) -> Duration {

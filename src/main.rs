@@ -28,7 +28,8 @@ use mobile_network_core_endpoints::{
 };
 use network::Network;
 use network_endpoints::{
-    add_application, delete_application, get_applications, get_edge_data_centers, NetworkWrapper,
+    add_application, delete_application, get_applications, get_edge_data_centers,
+    get_total_application_usage, NetworkWrapper,
 };
 use ran::Ran;
 use rand::prelude::*;
@@ -102,6 +103,8 @@ async fn main() -> std::io::Result<()> {
                 web::scope("/network")
                     .service(get_edge_data_centers)
                     .service(get_applications)
+                    .service(get_total_application_usage)
+                    .service(get_total_application_usage)
                     .service(add_application)
                     .service(delete_application),
             )
