@@ -57,7 +57,7 @@ impl EdgeDataCenter {
             .add_application(application.clone())
             .map_err(|err| EdgeDataCenterError::new(format!("{}", err)))
         {
-            Ok(_) => Ok(application.id().clone()),
+            Ok(_) => Ok(*application.id()),
             Err(err) => Err(err),
         }
     }
@@ -102,7 +102,7 @@ impl EdgeDataCenter {
     ) -> Result<u32, EdgeDataCenterError> {
         match self.application_runtime.get_application(application_id) {
             Ok(application) => Ok(application.get_total_usage()),
-            Err(e) => return Err(EdgeDataCenterError::new(format!("{}", e))),
+            Err(e) => Err(EdgeDataCenterError::new(format!("{}", e))),
         }
     }
 
@@ -112,7 +112,7 @@ impl EdgeDataCenter {
     ) -> Result<u32, EdgeDataCenterError> {
         match self.application_runtime.get_application(application_id) {
             Ok(application) => Ok(application.get_total_usage()),
-            Err(e) => return Err(EdgeDataCenterError::new(format!("{}", e))),
+            Err(e) => Err(EdgeDataCenterError::new(format!("{}", e))),
         }
     }
 }
@@ -218,7 +218,7 @@ mod tests {
     #[test]
     fn contains_application() {
         let mut eds = EdgeDataCenter::new(0, "Fredrik's EdgeDataCenter", Point::new(0., 0.));
-        let application = Application::new(0);
+        let _application = Application::new(0);
         let res = eds.add_application(0);
 
         assert!(res.is_ok());

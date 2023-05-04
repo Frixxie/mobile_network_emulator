@@ -75,7 +75,7 @@ impl MobileNetworkCore {
                         Some(ip_address) => ip_address,
                         None => unreachable!(),
                     };
-                    let pdu_session = PDUSession::new(tmp_orphans.pop().unwrap(), ip_address, &ran);
+                    let pdu_session = PDUSession::new(tmp_orphans.pop().unwrap(), ip_address, ran);
                     self.events.push(Self::create_location_reporting_event(
                         &ran.get_id().to_string(),
                         pdu_session.user().current_pos(),
@@ -162,7 +162,7 @@ impl MobileNetworkCore {
             };
             info!("User with id {} and ip {} is using application {}", user.user().get_id(), user.ip(), application.id());
             network
-                .use_application(user, &application, &user.get_ran().get_position())
+                .use_application(user, application, &user.get_ran().get_position())
                 .await
                 .unwrap();
         }
@@ -211,7 +211,7 @@ impl MobileNetworkCore {
                 {
                     self.http_client
                         .post(subscriber.subscriber.get_notify_endpoint())
-                        .json::<MobileNetworkCoreEvent>(&event)
+                        .json::<MobileNetworkCoreEvent>(event)
                         .send()
                         .await
                         .unwrap();

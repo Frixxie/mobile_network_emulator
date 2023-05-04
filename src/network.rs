@@ -39,7 +39,7 @@ impl Network {
         &mut self,
         user: &PDUSession,
         application: &Application,
-        ran_position: &Point,
+        _ran_position: &Point,
     ) -> Result<(), NetworkError> {
         match self
             .edge_data_centers

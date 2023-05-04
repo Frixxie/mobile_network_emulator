@@ -99,7 +99,6 @@ impl ApplicationRuntime {
     pub fn get_applications(&self) -> Vec<&Application> {
         self.applications
             .iter()
-            .map(|appliaction| appliaction)
             .collect()
     }
 
