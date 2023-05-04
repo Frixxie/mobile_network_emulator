@@ -102,6 +102,15 @@ impl ApplicationRuntime {
             .map(|appliaction| appliaction)
             .collect()
     }
+
+    pub fn get_application(&self, id: u32) -> Result<&Application, ApplicationRuntimeError> {
+        match self.applications.iter().find(|application| application.id() == &id) {
+            Some(application) => Ok(application),
+            None => Err(ApplicationRuntimeError::new(
+                "Application does not exist".to_string(),
+            )),
+        }
+    }
 }
 
 #[cfg(test)]

@@ -19,7 +19,6 @@ use actix_web::{
     web::{self, Data},
     App, HttpServer,
 };
-use application::Application;
 use edge_data_center::EdgeDataCenter;
 use geo::Point;
 use mobile_network_core::MobileNetworkCore;
@@ -44,7 +43,10 @@ fn random_point(rng: &mut ThreadRng, range: &Range<f64>) -> Point {
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
-    SimpleLogger::new().with_level(log::LevelFilter::Info).init().unwrap();
+    SimpleLogger::new()
+        .with_level(log::LevelFilter::Info)
+        .init()
+        .unwrap();
     let range = -500.0..500.;
     let num_users = 32;
     let user_velocdity = 1.5;
@@ -73,11 +75,6 @@ async fn main() -> std::io::Result<()> {
         })
         .collect();
 
-    let applications: Vec<Application> = (0..num_applications)
-        .into_iter()
-        .map(|id| Application::new(id))
-        .collect();
-
     let mnc = MobileNetworkCore::new(rans, users, ip_addresses);
     let mnc_wrapper = MobileNetworkCoreWrapper::new(mnc);
     let mnc_wrapper_data = Data::new(mnc_wrapper);
@@ -90,8 +87,8 @@ async fn main() -> std::io::Result<()> {
         })
         .collect();
 
-    for application in applications {
-        edge_data_centers[0].add_application(&application).unwrap();
+    for id in 0..num_applications {
+        edge_data_centers[0].add_application(id).unwrap();
     }
 
     let network = Network::new(edge_data_centers);

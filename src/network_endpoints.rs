@@ -51,38 +51,38 @@ pub async fn get_applications(
     Json(applications)
 }
 
-#[post("/edge_data_centers/{id}/applications")]
+#[post("/edge_data_centers/{edc_id}/applications/{application_id}")]
 pub async fn add_application(
-    id: Path<u32>,
+    edc_id: Path<u32>,
+    application_id: Path<u32>,
     network_wrapper: Data<NetworkWrapper>,
-    application: Json<Application>,
 ) -> Result<impl Responder, actix_web::Error> {
     match network_wrapper
         .network
         .write()
         .await
-        .get_mut_edge_data_center(*id)
+        .get_mut_edge_data_center(*edc_id)
         .unwrap()
-        .add_application(&application.into_inner().into())
+        .add_application(*application_id)
     {
         Ok(url) => Ok(url.to_string()),
         Err(err) => Err(ErrorInternalServerError(err)),
     }
 }
 
-#[delete("/edge_data_centers/{id}/applications")]
+#[delete("/edge_data_centers/{edc_id}/applications/{application_id}")]
 pub async fn delete_application(
-    id: Path<u32>,
+    edc_id: Path<u32>,
+    application_id: Path<u32>,
     network_wrapper: Data<NetworkWrapper>,
-    application: Json<Application>,
 ) -> Result<impl Responder, actix_web::Error> {
     match network_wrapper
         .network
         .write()
         .await
-        .get_mut_edge_data_center(*id)
+        .get_mut_edge_data_center(*edc_id)
         .unwrap()
-        .remove_application(&application.into_inner().into())
+        .remove_application(*application_id)
     {
         Ok(_) => Ok("OK"),
         Err(err) => Err(ErrorInternalServerError(err)),

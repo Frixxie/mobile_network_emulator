@@ -50,7 +50,9 @@ impl Network {
                 //We know that the edge data center has the application.
                 // let delay = Self::generate_delay(&ran_position, edge_data_center.get_position());
                 // tokio::time::sleep(delay).await;
-                let _usage = edge_data_center.use_application(*user.ip(), application).unwrap();
+                let _usage = edge_data_center
+                    .use_application(*user.ip(), application)
+                    .unwrap();
                 Ok(())
             }
             None => Err(NetworkError::new(&format!(
@@ -135,7 +137,7 @@ mod tests {
             std::net::IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
             &ran,
         );
-        edge_data_centers[0].add_application(&application).unwrap();
+        edge_data_centers[0].add_application(0).unwrap();
         let mut network = Network::new(edge_data_centers);
 
         let result = network

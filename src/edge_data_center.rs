@@ -50,10 +50,8 @@ impl EdgeDataCenter {
         self.id
     }
 
-    pub fn add_application(
-        &mut self,
-        application: &Application,
-    ) -> Result<u32, EdgeDataCenterError> {
+    pub fn add_application(&mut self, application_id: u32) -> Result<u32, EdgeDataCenterError> {
+        let application = Application::new(application_id);
         match self
             .application_runtime
             .add_application(application.clone())
@@ -64,13 +62,11 @@ impl EdgeDataCenter {
         }
     }
 
-    pub fn remove_application(
-        &mut self,
-        application: &Application,
-    ) -> Result<(), EdgeDataCenterError> {
+    pub fn remove_application(&mut self, application_id: u32) -> Result<(), EdgeDataCenterError> {
+        let application = Application::new(application_id);
         match self
             .application_runtime
-            .remove_application(application)
+            .remove_application(&application)
             .map_err(|err| EdgeDataCenterError::new(format!("{}", err)))
         {
             Ok(_) => Ok(()),
@@ -98,6 +94,26 @@ impl EdgeDataCenter {
 
     pub fn get_position(&self) -> &Point {
         &self.position
+    }
+
+    pub fn get_total_uses_of_application(
+        &self,
+        application_id: u32,
+    ) -> Result<u32, EdgeDataCenterError> {
+        match self.application_runtime.get_application(application_id) {
+            Ok(application) => Ok(application.get_total_usage()),
+            Err(e) => return Err(EdgeDataCenterError::new(format!("{}", e))),
+        }
+    }
+
+    pub fn dump_current_uses_of_appliaction(
+        &self,
+        application_id: u32,
+    ) -> Result<u32, EdgeDataCenterError> {
+        match self.application_runtime.get_application(application_id) {
+            Ok(application) => Ok(application.get_total_usage()),
+            Err(e) => return Err(EdgeDataCenterError::new(format!("{}", e))),
+        }
     }
 }
 
@@ -131,8 +147,7 @@ mod tests {
     #[test]
     fn add_application() {
         let mut eds = EdgeDataCenter::new(0, "Fredrik's EdgeDataCenter", Point::new(0., 0.));
-        let application = Application::new(0);
-        let res = eds.add_application(&application);
+        let res = eds.add_application(0);
         assert!(res.is_ok());
         assert_eq!(eds.application_runtime.num_applications(), 1);
     }
@@ -140,23 +155,21 @@ mod tests {
     #[test]
     fn add_application_already_present_should_fail() {
         let mut eds = EdgeDataCenter::new(0, "Fredrik's EdgeDataCenter", Point::new(0., 0.));
-        let application = Application::new(0);
-        let mut res = eds.add_application(&application);
+        let mut res = eds.add_application(0);
         assert!(res.is_ok());
         assert_eq!(eds.application_runtime.num_applications(), 1);
-        res = eds.add_application(&application);
+        res = eds.add_application(0);
         assert!(res.is_err());
     }
 
     #[test]
     fn remove_application() {
         let mut eds = EdgeDataCenter::new(0, "Fredrik's EdgeDataCenter", Point::new(0., 0.));
-        let application = Application::new(0);
-        let res = eds.add_application(&application);
+        let res = eds.add_application(0);
         assert!(res.is_ok());
         assert_eq!(eds.application_runtime.num_applications(), 1);
 
-        let res = eds.remove_application(&application);
+        let res = eds.remove_application(0);
         assert!(res.is_ok());
         assert_eq!(eds.application_runtime.num_applications(), 0);
     }
@@ -164,16 +177,15 @@ mod tests {
     #[test]
     fn remove_application_two_times() {
         let mut eds = EdgeDataCenter::new(0, "Fredrik's EdgeDataCenter", Point::new(0., 0.));
-        let application = Application::new(0);
-        let res = eds.add_application(&application);
+        let res = eds.add_application(0);
         assert!(res.is_ok());
         assert_eq!(eds.application_runtime.num_applications(), 1);
 
-        let res = eds.remove_application(&application);
+        let res = eds.remove_application(0);
         assert!(res.is_ok());
         assert_eq!(eds.application_runtime.num_applications(), 0);
 
-        let res = eds.remove_application(&application);
+        let res = eds.remove_application(0);
         assert!(res.is_err());
         assert_eq!(eds.application_runtime.num_applications(), 0);
     }
@@ -182,7 +194,7 @@ mod tests {
     fn use_application() {
         let mut eds = EdgeDataCenter::new(0, "Fredrik's EdgeDataCenter", Point::new(0., 0.));
         let application = Application::new(0);
-        let res = eds.add_application(&application);
+        let res = eds.add_application(0);
 
         assert!(res.is_ok());
         assert_eq!(eds.application_runtime.num_applications(), 1);
@@ -207,7 +219,7 @@ mod tests {
     fn contains_application() {
         let mut eds = EdgeDataCenter::new(0, "Fredrik's EdgeDataCenter", Point::new(0., 0.));
         let application = Application::new(0);
-        let res = eds.add_application(&application);
+        let res = eds.add_application(0);
 
         assert!(res.is_ok());
         assert_eq!(eds.application_runtime.num_applications(), 1);
