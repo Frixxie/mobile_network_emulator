@@ -82,28 +82,21 @@ impl ApplicationRuntime {
     }
 
     pub fn contains_application(&self, id: &u32) -> bool {
-        match self
-            .applications
+        self.applications
             .iter()
-            .find(|application| application.id() == id)
-        {
-            Some(_) => true,
-            None => false,
-        }
-    }
-
-    pub fn num_applications(&self) -> usize {
-        self.applications.len()
+            .any(|application| application.id() == id)
     }
 
     pub fn get_applications(&self) -> Vec<&Application> {
-        self.applications
-            .iter()
-            .collect()
+        self.applications.iter().collect()
     }
 
     pub fn get_application(&self, id: u32) -> Result<&Application, ApplicationRuntimeError> {
-        match self.applications.iter().find(|application| application.id() == &id) {
+        match self
+            .applications
+            .iter()
+            .find(|application| application.id() == &id)
+        {
             Some(application) => Ok(application),
             None => Err(ApplicationRuntimeError::new(
                 "Application does not exist".to_string(),

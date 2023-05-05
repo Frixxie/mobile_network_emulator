@@ -1,3 +1,6 @@
+#[allow(unused)]
+#[allow(dead_code)]
+
 use std::{
     hash::{Hash, Hasher},
     net::{Ipv4Addr, Ipv6Addr},

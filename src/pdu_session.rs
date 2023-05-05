@@ -41,7 +41,7 @@ impl PDUSession {
     }
 }
 
-impl<'a> Serialize for PDUSession {
+impl Serialize for PDUSession {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
