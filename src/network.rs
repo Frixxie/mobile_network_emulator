@@ -218,7 +218,7 @@ mod tests {
             &ran,
         );
         edge_data_centers[0].add_application(0).unwrap();
-        let network = Network::new(edge_data_centers);
+        let mut network = Network::new(edge_data_centers);
 
         let result = network.use_application(&pdu_session, &application, &Point::new(1.0, 1.0));
 
