@@ -91,6 +91,10 @@ impl ApplicationRuntime {
         self.applications.iter().collect()
     }
 
+    pub fn num_applications(&self) -> usize {
+        self.applications.len()
+    }
+
     pub fn get_application(&self, id: u32) -> Result<&Application, ApplicationRuntimeError> {
         match self
             .applications
