@@ -3,15 +3,12 @@ use actix_web::{
     web::{Data, Json},
     Responder,
 };
+use mongodb::Database;
 use tokio::sync::RwLock;
 
 use crate::{
-    mobile_network_core::MobileNetworkCore,
-    mobile_network_core_event::{EventSubscriber, MobileNetworkCoreEvent},
-    network_endpoints::NetworkWrapper,
-    pdu_session::PDUSession,
-    ran::Ran,
-    user::User,
+    mobile_network_core::MobileNetworkCore, network_endpoints::NetworkWrapper,
+    pdu_session::PDUSession, ran::Ran, user::User,
 };
 
 pub struct MobileNetworkCoreWrapper {
@@ -60,63 +57,18 @@ pub async fn get_connected_users(
 pub async fn update_user_positions(
     mobile_network_core_wrapper: Data<MobileNetworkCoreWrapper>,
     network_wrapper: Data<NetworkWrapper>,
+    database: Data<Database>,
 ) -> impl Responder {
     let mut network = network_wrapper.network.write().await;
     let mut mnc = mobile_network_core_wrapper
         .mobile_network_core
         .write()
         .await;
-    mnc.try_connect_orphans();
-    mnc.update_user_positions();
-    mnc.generate_location_events();
-    mnc.publish_events().await;
-    mnc.use_some_applications(&mut network).await;
+    mnc.try_connect_orphans(&database).await;
+    mnc.update_user_positions(&database).await;
+    mnc.generate_location_events(&database).await;
+    mnc.use_some_applications(&mut network, &database).await;
     "OK"
-}
-
-/// This function makes a subscriber subscribe to events
-#[post("/subscribers")]
-pub async fn post_subscribers(
-    mobile_network_core_wrapper: Data<MobileNetworkCoreWrapper>,
-    event_subscription: Json<EventSubscriber>,
-) -> impl Responder {
-    let mut mnc = mobile_network_core_wrapper
-        .mobile_network_core
-        .write()
-        .await;
-    mnc.add_subscriber(event_subscription.into_inner());
-    "OK"
-}
-
-#[get("/subscribers")]
-pub async fn get_subscribers(
-    mobile_network_core_wrapper: Data<MobileNetworkCoreWrapper>,
-) -> impl Responder {
-    let subscribers: Vec<EventSubscriber> = mobile_network_core_wrapper
-        .mobile_network_core
-        .read()
-        .await
-        .get_subscribers()
-        .into_iter()
-        .map(|subscriber| subscriber.get_subscriber())
-        .cloned()
-        .collect();
-    Json(subscribers)
-}
-
-#[get("/events")]
-pub async fn get_events(
-    mobile_network_core_wrapper: Data<MobileNetworkCoreWrapper>,
-) -> impl Responder {
-    let events: Vec<MobileNetworkCoreEvent> = mobile_network_core_wrapper
-        .mobile_network_core
-        .read()
-        .await
-        .get_events()
-        .into_iter()
-        .cloned()
-        .collect();
-    Json(events)
 }
 
 #[get("/rans")]

@@ -1,6 +1,7 @@
 use std::{error::Error, fmt::Display, time::Duration};
 
 use geo::{EuclideanDistance, Point};
+use serde::Serialize;
 
 use crate::{application::Application, edge_data_center::EdgeDataCenter, pdu_session::PDUSession};
 
@@ -25,6 +26,25 @@ impl Display for NetworkError {
 
 impl Error for NetworkError {}
 
+#[derive(Debug, Clone, Serialize)]
+pub struct NetworkLogEntry {
+    user_id: u32,
+    ip_address: String,
+    time_used: u64,
+    application_id: u32,
+}
+
+impl NetworkLogEntry {
+    pub fn new(user_id: u32, ip_address: String, time_used: u64, application_id: u32) -> Self {
+        Self {
+            user_id,
+            ip_address,
+            time_used,
+            application_id,
+        }
+    }
+}
+
 pub struct Network {
     edge_data_centers: Vec<EdgeDataCenter>,
 }
@@ -34,13 +54,12 @@ impl Network {
         Network { edge_data_centers }
     }
 
-    //TODO: Change this to take in position as well
-    pub async fn use_application(
+    pub fn use_application(
         &mut self,
         user: &PDUSession,
         application: &Application,
-        _ran_position: &Point,
-    ) -> Result<(), NetworkError> {
+        ran_position: &Point,
+    ) -> Result<NetworkLogEntry, NetworkError> {
         match self
             .edge_data_centers
             .iter_mut()
@@ -48,12 +67,19 @@ impl Network {
         {
             Some(edge_data_center) => {
                 //We know that the edge data center has the application.
-                // let delay = Self::generate_delay(&ran_position, edge_data_center.get_position());
-                // tokio::time::sleep(delay).await;
+                let delay = Self::generate_delay(&ran_position, edge_data_center.get_position());
                 let _usage = edge_data_center
                     .use_application(*user.ip(), application)
                     .unwrap();
-                Ok(())
+
+                let network_log_entry = NetworkLogEntry::new(
+                    user.user().get_id(),
+                    user.ip().to_string(),
+                    delay.as_secs(),
+                    *application.id(),
+                );
+
+                Ok(network_log_entry)
             }
             None => Err(NetworkError::new(&format!(
                 "Application with id {} does not exist",
@@ -192,11 +218,9 @@ mod tests {
             &ran,
         );
         edge_data_centers[0].add_application(0).unwrap();
-        let mut network = Network::new(edge_data_centers);
+        let network = Network::new(edge_data_centers);
 
-        let result = network
-            .use_application(&pdu_session, &application, &Point::new(1.0, 1.0))
-            .await;
+        let result = network.use_application(&pdu_session, &application, &Point::new(1.0, 1.0));
 
         assert!(result.is_ok());
     }
@@ -219,9 +243,7 @@ mod tests {
             &ran,
         );
 
-        let result = network
-            .use_application(&pdu_session, &application, &Point::new(1.0, 1.0))
-            .await;
+        let result = network.use_application(&pdu_session, &application, &Point::new(1.0, 1.0));
 
         assert!(result.is_err());
     }
