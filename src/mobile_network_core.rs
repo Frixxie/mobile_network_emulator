@@ -71,7 +71,7 @@ impl MobileNetworkCore {
             }
         }
         self.orphans = tmp_orphans;
-        if new_events.len() > 0 {
+        if !new_events.is_empty() {
             collection.insert_many(new_events, None).await.unwrap();
         }
     }
@@ -106,7 +106,7 @@ impl MobileNetworkCore {
             })
             .collect();
         self.orphans.append(&mut new_orphans);
-        if new_events.len() > 0 {
+        if !new_events.is_empty() {
             collection.insert_many(new_events, None).await.unwrap();
         }
     }
@@ -125,7 +125,7 @@ impl MobileNetworkCore {
                 )
             })
             .collect();
-        if all_events.len() > 0 {
+        if !all_events.is_empty() {
             collection.insert_many(all_events, None).await.unwrap();
         }
     }
@@ -238,11 +238,11 @@ impl MobileNetworkCore {
 #[cfg(test)]
 mod tests {
 
-    use std::net::Ipv4Addr;
+    
 
-    use super::*;
-    use geo::Point;
-    use url::Url;
+    
+    
+    
 
     //#[test]
     //fn try_connect_orphans() {

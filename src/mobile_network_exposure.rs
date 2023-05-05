@@ -49,7 +49,7 @@ impl MobileNetworkExposure {
     }
 
     pub async fn publish_events(&mut self, database: &Database) {
-        let events = self.get_events(&database).await;
+        let events = self.get_events(database).await;
         for subscriber in self.event_subscribers.iter_mut() {
             let res = events
                 .iter()
@@ -60,8 +60,7 @@ impl MobileNetworkExposure {
                             .subscriber
                             .get_user_ids()
                             .contains(&&event.get_user_id())
-                })
-                .map(|event| event.clone())
+                }).cloned()
                 .collect();
             self.http_client
                 .post(subscriber.subscriber.get_notify_endpoint())
@@ -84,9 +83,7 @@ impl MobileNetworkExposure {
             .collect::<Vec<Result<_, _>>>()
             .await
             .iter()
-            .filter(|r| r.is_ok())
-            //We know that this should be fine
-            .map(|r| r.clone().unwrap())
+            .filter_map(|r| r.clone().ok())
             .collect()
     }
 }

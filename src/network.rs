@@ -67,7 +67,7 @@ impl Network {
         {
             Some(edge_data_center) => {
                 //We know that the edge data center has the application.
-                let delay = Self::generate_delay(&ran_position, edge_data_center.get_position());
+                let delay = Self::generate_delay(ran_position, edge_data_center.get_position());
                 let _usage = edge_data_center
                     .use_application(*user.ip(), application)
                     .unwrap();
