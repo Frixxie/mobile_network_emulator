@@ -53,17 +53,17 @@ pub async fn get_applications(
 
 #[post("/edge_data_centers/{edc_id}/applications/{application_id}")]
 pub async fn add_application(
-    edc_id: Path<u32>,
-    application_id: Path<u32>,
+    path: Path<(u32, u32)>,
     network_wrapper: Data<NetworkWrapper>,
 ) -> Result<impl Responder, actix_web::Error> {
+    let (edc_id, application_id) = path.into_inner();
     match network_wrapper
         .network
         .write()
         .await
-        .get_mut_edge_data_center(*edc_id)
+        .get_mut_edge_data_center(edc_id)
         .unwrap()
-        .add_application(*application_id)
+        .add_application(application_id)
     {
         Ok(url) => Ok(url.to_string()),
         Err(err) => Err(ErrorInternalServerError(err)),
@@ -72,17 +72,17 @@ pub async fn add_application(
 
 #[delete("/edge_data_centers/{edc_id}/applications/{application_id}")]
 pub async fn delete_application(
-    edc_id: Path<u32>,
-    application_id: Path<u32>,
+    path: Path<(u32, u32)>,
     network_wrapper: Data<NetworkWrapper>,
 ) -> Result<impl Responder, actix_web::Error> {
+    let (edc_id, application_id) = path.into_inner();
     match network_wrapper
         .network
         .write()
         .await
-        .get_mut_edge_data_center(*edc_id)
+        .get_mut_edge_data_center(edc_id)
         .unwrap()
-        .remove_application(*application_id)
+        .remove_application(application_id)
     {
         Ok(_) => Ok("OK"),
         Err(err) => Err(ErrorInternalServerError(err)),
@@ -91,32 +91,32 @@ pub async fn delete_application(
 
 #[get("/edge_data_centers/{edc_id}/applications/{application_id}/total_usages")]
 pub async fn get_total_application_usage(
-    edc_id: Path<u32>,
-    application_id: Path<u32>,
+    path: Path<(u32, u32)>,
     network_wrapper: Data<NetworkWrapper>,
 ) -> impl Responder {
+    let (edc_id, application_id) = path.into_inner();
     Json(
         network_wrapper
             .network
             .read()
             .await
-            .get_total_application_usage(*edc_id, *application_id)
+            .get_total_application_usage(edc_id, application_id)
             .unwrap(),
     )
 }
 
 #[get("/edge_data_centers/{edc_id}/applications/{application_id}/usages")]
 pub async fn get_application_usage(
-    edc_id: Path<u32>,
-    application_id: Path<u32>,
+    path: Path<(u32, u32)>,
     network_wrapper: Data<NetworkWrapper>,
 ) -> impl Responder {
+    let (edc_id, application_id) = path.into_inner();
     Json(
         network_wrapper
             .network
             .read()
             .await
-            .get_application_usage(*edc_id, *application_id)
+            .get_application_usage(edc_id, application_id)
             .unwrap(),
     )
 }
