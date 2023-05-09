@@ -105,7 +105,7 @@ pub async fn get_total_application_usage(
     )
 }
 
-#[get("/edge_data_centers/{edc_id}/applications/{application_id}/total_usages")]
+#[get("/edge_data_centers/{edc_id}/applications/{application_id}/get_usage")]
 pub async fn get_application_usage(
     edc_id: Path<u32>,
     application_id: Path<u32>,
