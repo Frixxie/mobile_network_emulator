@@ -104,19 +104,3 @@ pub async fn get_total_application_usage(
             .unwrap(),
     )
 }
-
-#[get("/edge_data_centers/{edc_id}/applications/{application_id}/usages")]
-pub async fn get_application_usage(
-    path: Path<(u32, u32)>,
-    network_wrapper: Data<NetworkWrapper>,
-) -> impl Responder {
-    let (edc_id, application_id) = path.into_inner();
-    Json(
-        network_wrapper
-            .network
-            .read()
-            .await
-            .get_application_usage(edc_id, application_id)
-            .unwrap(),
-    )
-}

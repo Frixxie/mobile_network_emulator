@@ -105,16 +105,6 @@ impl EdgeDataCenter {
             Err(e) => Err(EdgeDataCenterError::new(format!("{}", e))),
         }
     }
-
-    pub fn dump_current_uses_of_appliaction(
-        &self,
-        application_id: u32,
-    ) -> Result<u32, EdgeDataCenterError> {
-        match self.application_runtime.get_application(application_id) {
-            Ok(application) => Ok(application.get_total_usage()),
-            Err(e) => Err(EdgeDataCenterError::new(format!("{}", e))),
-        }
-    }
 }
 
 impl Serialize for EdgeDataCenter {
