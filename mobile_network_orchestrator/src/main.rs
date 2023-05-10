@@ -1,5 +1,7 @@
 use std::{collections::HashMap, error::Error, fmt::Display, time::Duration};
 
+use geo::MultiPoint;
+use mobile_network_core_event::MobileNetworkCoreEvent;
 use reqwest::Client;
 use serde::Deserialize;
 
@@ -75,6 +77,22 @@ async fn fetch_applications(
         Err(e) => Err(OrchestratorError::new(&e.to_string())),
     }
 }
+
+fn find_user_id(ip_addr: &str, events: &[MobileNetworkCoreEvent]) -> u32 {
+    todo!();
+    let pdn_connection_events = events.iter().filter(|event| {
+    });
+
+}
+
+fn find_location(ip_addr: &str, events: &[MobileNetworkCoreEvent]) -> MultiPoint {
+    todo!();
+}
+
+// pub trait DecideLocation<'a> {
+//     fn decide(edcs: &'a [EdgeDataCenter], accesses: &[(String, usize)]) -> &'a EdgeDataCenter;
+// }
+
 #[tokio::main]
 async fn main() {
     let base_url = "http://localhost:8080/network";

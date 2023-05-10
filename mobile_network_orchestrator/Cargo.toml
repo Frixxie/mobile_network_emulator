@@ -10,3 +10,4 @@ geo = "0.24.1"
 reqwest = { version = "0.11.17", features = ["json"] }
 serde = "1.0.162"
 tokio = { version = "1.28.1", features = ["full"] }
+mobile_network_core_event = {path = "../mobile_network_core_event"}

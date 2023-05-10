@@ -1,0 +1,11 @@
+[package]
+name = "mobile_network_core_event"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+geo = "0.24.1"
+serde = "1.0.162"
+url = "2.3.1"

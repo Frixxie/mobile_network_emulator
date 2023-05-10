@@ -3,13 +3,11 @@ use actix_web::{
     web::{Data, Json},
     Responder,
 };
+use mobile_network_core_event::MobileNetworkCoreEvent;
 use mongodb::Database;
 use tokio::sync::RwLock;
 
-use crate::{
-    mobile_network_core_event::{EventSubscriber, MobileNetworkCoreEvent},
-    mobile_network_exposure::MobileNetworkExposure,
-};
+use crate::mobile_network_exposure::{MobileNetworkExposure, EventSubscriber};
 
 pub struct MobileNetworkExposureWrapper {
     mobile_network_core: RwLock<MobileNetworkExposure>,

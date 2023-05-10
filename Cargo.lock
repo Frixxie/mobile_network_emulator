@@ -1414,6 +1414,7 @@ dependencies = [
  "futures",
  "geo",
  "log",
+ "mobile_network_core_event",
  "mongodb",
  "rand",
  "rand_distr",
@@ -1427,10 +1428,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "mobile_network_core_event"
+version = "0.1.0"
+dependencies = [
+ "geo",
+ "serde",
+ "url",
+]
+
+[[package]]
 name = "mobile_network_orchestrator"
 version = "0.1.0"
 dependencies = [
  "geo",
+ "mobile_network_core_event",
  "reqwest",
  "serde",
  "tokio",

@@ -5,18 +5,18 @@ use std::{
 
 use geo::{Contains, Point};
 use log::info;
+use mobile_network_core_event::{
+    AccuracyFulfillmentIndicator, CivicAddress, Event,
+    EventKind::{LocationReporting, PdnConnectionEvent},
+    GeographicArea, InterfaceIndication, LdrType, LocationInfo, MinorLocationQoS,
+    MobileNetworkCoreEvent, PdnConnectionInformation, PdnConnectionStatus, PdnType,
+    PositioningMethod,
+};
 use mongodb::{Collection, Database};
 use rand::seq::SliceRandom;
 
 use crate::{
     application::Application,
-    mobile_network_core_event::{
-        AccuracyFulfillmentIndicator, CivicAddress, Event,
-        EventKind::{LocationReporting, PdnConnectionEvent},
-        GeographicArea, InterfaceIndication, LdrType, LocationInfo, MinorLocationQoS,
-        MobileNetworkCoreEvent, PdnConnectionInformation, PdnConnectionStatus, PdnType,
-        PositioningMethod,
-    },
     network::{Network, NetworkLogEntry},
     pdu_session::PDUSession,
     ran::Ran,
@@ -237,12 +237,6 @@ impl MobileNetworkCore {
 
 #[cfg(test)]
 mod tests {
-
-    
-
-    
-    
-    
 
     //#[test]
     //fn try_connect_orphans() {

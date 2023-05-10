@@ -21,3 +21,4 @@ simple_logger = "4.1.0"
 structopt = "0.3.26"
 tokio = { version = "1.28.1", features = ["full"] }
 url = "2.3.1"
+mobile_network_core_event = {path = "../mobile_network_core_event"}

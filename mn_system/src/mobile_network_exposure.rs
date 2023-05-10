@@ -3,9 +3,39 @@ use std::collections::HashSet;
 use futures::StreamExt;
 use mongodb::{Collection, Database};
 use reqwest::Client;
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 
-use crate::mobile_network_core_event::{EventSubscriber, MobileNetworkCoreEvent};
+use mobile_network_core_event::{MobileNetworkCoreEvent, EventKind};
+use url::Url;
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct EventSubscriber {
+    notify_endpoint: String,
+    kind: EventKind,
+    user_ids: Vec<u32>,
+}
+
+impl EventSubscriber {
+    pub fn new(notify_endpoint: Url, kind: EventKind, user_ids: Vec<u32>) -> Self {
+        EventSubscriber {
+            notify_endpoint: notify_endpoint.as_str().to_string(),
+            kind,
+            user_ids,
+        }
+    }
+
+    pub fn get_event_type(&self) -> &EventKind {
+        &self.kind
+    }
+
+    pub fn get_notify_endpoint(&self) -> Url {
+        Url::parse(&self.notify_endpoint).unwrap()
+    }
+
+    pub fn get_user_ids(&self) -> Vec<&u32> {
+        self.user_ids.iter().collect()
+    }
+}
 
 #[derive(Clone, Debug, Serialize)]
 pub struct Subscriber {

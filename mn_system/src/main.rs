@@ -3,7 +3,6 @@ mod application_runtime;
 mod edge_data_center;
 mod mobile_network_core;
 mod mobile_network_core_endpoints;
-mod mobile_network_core_event;
 mod mobile_network_exposure;
 mod mobile_network_exposure_endpoints;
 mod network;
