@@ -4,8 +4,6 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-use url::Url;
-
 use geo::{Point, Polygon};
 use serde::{Deserialize, Serialize};
 
@@ -23,20 +21,20 @@ pub enum Event {
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct LocationInfo {
-    age_of_location_info: u64,
-    cell_id: String,
-    e_node_b_id: String,
-    routing_area_id: String,
-    tracking_area_id: String,
-    plmn_id: String,
-    twan_id: String,
-    geographic_area: GeographicArea,
-    civic_address: CivicAddress,
-    position_method: Vec<PositioningMethod>,
-    qos_fulfill_ind: AccuracyFulfillmentIndicator,
-    ue_velocity: VelocityEstimate,
-    ldr_type: LdrType,
-    achieved_qos: MinorLocationQoS,
+    pub age_of_location_info: u64,
+    pub cell_id: String,
+    pub e_node_b_id: String,
+    pub routing_area_id: String,
+    pub tracking_area_id: String,
+    pub plmn_id: String,
+    pub twan_id: String,
+    pub geographic_area: GeographicArea,
+    pub civic_address: CivicAddress,
+    pub position_method: Vec<PositioningMethod>,
+    pub qos_fulfill_ind: AccuracyFulfillmentIndicator,
+    pub ue_velocity: VelocityEstimate,
+    pub ldr_type: LdrType,
+    pub achieved_qos: MinorLocationQoS,
 }
 
 impl Eq for LocationInfo {}
@@ -238,13 +236,13 @@ impl Default for MacAddr {
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct PdnConnectionInformation {
-    status: PdnConnectionStatus,
-    apn: String,
-    pdn_type: PdnType,
-    interface_ind: InterfaceIndication,
-    ipv4_addr: Ipv4Addr,
-    ipv6_addrs: Option<Vec<Ipv6Addr>>,
-    mac_addrs: Option<Vec<MacAddr>>,
+    pub status: PdnConnectionStatus,
+    pub apn: String,
+    pub pdn_type: PdnType,
+    pub interface_ind: InterfaceIndication,
+    pub ipv4_addr: Ipv4Addr,
+    pub ipv6_addrs: Option<Vec<Ipv6Addr>>,
+    pub mac_addrs: Option<Vec<MacAddr>>,
 }
 
 impl PdnConnectionInformation {
@@ -285,6 +283,10 @@ impl MobileNetworkCoreEvent {
                 .as_secs(),
             user_id,
         }
+    }
+
+    pub fn get_event(&self) -> &Event {
+        &self.event
     }
 
     pub fn get_event_type(&self) -> &EventKind {

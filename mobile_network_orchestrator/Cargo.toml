@@ -11,3 +11,9 @@ reqwest = { version = "0.11.17", features = ["json"] }
 serde = "1.0.162"
 tokio = { version = "1.28.1", features = ["full"] }
 mobile_network_core_event = {path = "../mobile_network_core_event"}
+mongodb = "2.5.0"
+structopt = "0.3.26"
+log = "0.4.17"
+simple_logger = "4.1.0"
+futures = "0.3.28"
+rayon = "1.7.0"
