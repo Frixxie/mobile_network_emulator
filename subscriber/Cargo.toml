@@ -1,0 +1,12 @@
+[package]
+name = "subscriber"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+oauth2 = "4.3.0"
+reqwest = { version = "0.11.14", features = ["json", "cookies"] }
+serde_json = "1.0.92"
+tokio = { version = "1.25.0", features = ["full"] }

@@ -1,2 +1,2 @@
 [workspace]
-members = ["mn_system", "mobile_network_orchestrator"]
+members = ["mn_system", "mobile_network_orchestrator", "subscriber", "tokio_mpsc_test"]
