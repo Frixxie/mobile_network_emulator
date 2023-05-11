@@ -83,28 +83,38 @@ impl MobileNetworkCore {
         self.orphans.iter_mut().for_each(|user| {
             user.next_pos();
         });
-        let mut new_orphans = self
-            .rans
-            .iter_mut()
-            .flat_map(|ran| ran.update_connected_users())
-            .map(|pdu_session| {
+        let mut new_orphans = Vec::new();
+        for ran_index in 0..self.rans.len() {
+            let pdu_sessions = self.rans[ran_index].update_connected_users();
+            'next_pdu_session: for pdu_session in pdu_sessions {
+                for ran in self.rans.iter_mut() {
+                    if ran.contains(pdu_session.user()) {
+                        info!(
+                            "user with id {} and ip {} handed over to {}",
+                            pdu_session.user(),
+                            pdu_session.ip().to_string(),
+                            ran.get_id()
+                        );
+                        ran.connect_user(pdu_session);
+                        continue 'next_pdu_session;
+                    }
+                }
                 let (user, ip_address) = pdu_session.release();
                 let v4addr = match ip_address {
                     IpAddr::V4(v4addr) => v4addr,
                     _ => unreachable!(),
                 };
-                // TODO: Fix this loop
                 new_events.push(Self::create_location_reporting_event(
-                    "Ups ran id is supposed to be here",
+                    format!("{}", self.rans[ran_index].get_id()).as_str(),
                     user.current_pos(),
                     LdrType::LeavingFromArea,
                     user.get_id(),
                 ));
                 new_events.push(Self::release_pdn_connection_event(v4addr, user.get_id()));
                 self.available_ip_addresses.push(ip_address);
-                user
-            })
-            .collect();
+                new_orphans.push(user);
+            }
+        }
         self.orphans.append(&mut new_orphans);
         if !new_events.is_empty() {
             collection.insert_many(new_events, None).await.unwrap();

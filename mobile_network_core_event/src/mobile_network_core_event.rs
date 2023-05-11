@@ -296,4 +296,8 @@ impl MobileNetworkCoreEvent {
     pub fn get_user_id(&self) -> u32 {
         self.user_id
     }
+
+    pub fn get_timestamp(&self) -> u64 {
+        self.timestamp
+    }
 }

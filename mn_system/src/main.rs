@@ -77,7 +77,7 @@ async fn main() -> std::io::Result<()> {
 
     let bounds = -500.0..500.;
     let num_users = 32;
-    let user_velocdity = 1.5;
+    let user_velocdity = 0.5;
     let num_rans = 16;
     let num_edge_data_centers = 8;
     let num_applications = 8;
