@@ -268,14 +268,18 @@ async fn main() {
                     // };
 
                     let points = find_location(ip, &events);
-                    for (point, id) in points {
-                        println!(
-                            "{} with {}, should have pos ({},{})",
-                            ip,
-                            id,
-                            point.x(),
-                            point.y()
-                        );
+                    if points.len() > 0 {
+                        for (point, id) in points {
+                            println!(
+                                "{} with {}, should have pos ({},{})",
+                                ip,
+                                id,
+                                point.x(),
+                                point.y()
+                            );
+                        }
+                    } else {
+                        println!("failed to find position for {}", ip)
                     }
                 }
             }
