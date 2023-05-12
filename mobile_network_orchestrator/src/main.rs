@@ -8,10 +8,7 @@ use std::{
 use futures::StreamExt;
 use geo::Point;
 use mobile_network_core_event::MobileNetworkCoreEvent;
-use mongodb::{
-    bson::{doc, serde_helpers::timestamp_as_u32},
-    Collection,
-};
+use mongodb::{bson::doc, Collection};
 use rayon::prelude::*;
 use reqwest::Client;
 use serde::Deserialize;
@@ -179,10 +176,12 @@ fn find_location(ip_addr: &str, events: &[MobileNetworkCoreEvent]) -> Vec<(Point
                         None
                     }
                 }
-            }).max_by(|(_, timestamp_a, _), (_, timestamp_b, _)| timestamp_a.cmp(timestamp_b)).map(|(pos, _timestamp, id)| (pos, id)).unwrap();
+            }).max_by(|(_, timestamp_a, _), (_, timestamp_b, _)| timestamp_a.cmp(timestamp_b)).unwrap();
         res.push(position);
     }
-    res
+    res.iter()
+        .map(|(pos, _timestamp, id)| (pos.clone(), id.clone()))
+        .collect()
 }
 
 #[tokio::main]
@@ -222,7 +221,7 @@ async fn main() {
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_secs()
-            - 60;
+            - 240;
         let events: Vec<MobileNetworkCoreEvent> = collection
             .find(
                 doc! {
@@ -248,22 +247,41 @@ async fn main() {
         )
         .await;
 
+        // TODO: It may become a problem if the applications are moved and they get out of order
         for (old, new) in applications.iter().zip(new_applications.iter()) {
             println!("{}, {}", old.id, new.id);
             let diff = new.clone() - old.clone();
 
-            println!("Application with id: {}", diff);
+            dbg!(&diff);
             for (ip, value) in diff.times_used.iter() {
                 if value > &0 {
+                    println!(
+                        "Asking for position for ip {} who has used appliaction {} {} times",
+                        ip, diff.id, value
+                    );
+                    // let (point, id) = match find_location(ip, &events) {
+                    //     Some((point, id)) => (point, id),
+                    //     None => {
+                    //         println!("Failed to find position for ip {}", ip);
+                    //         continue;
+                    //     }
+                    // };
+
                     let points = find_location(ip, &events);
                     for (point, id) in points {
-                        println!("{} with {}, should have pos ({},{})", ip, id, point.x(), point.y());
+                        println!(
+                            "{} with {}, should have pos ({},{})",
+                            ip,
+                            id,
+                            point.x(),
+                            point.y()
+                        );
                     }
                 }
             }
         }
 
         applications = new_applications;
-        tokio::time::sleep(Duration::from_secs(30)).await
+        tokio::time::sleep(Duration::from_secs(5)).await
     }
 }

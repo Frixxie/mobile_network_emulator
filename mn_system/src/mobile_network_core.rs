@@ -168,7 +168,9 @@ impl MobileNetworkCore {
                 .unwrap();
             network_logs.push(res);
         }
-        collection.insert_many(network_logs, None).await.unwrap();
+        if !network_logs.is_empty() {
+            collection.insert_many(network_logs, None).await.unwrap();
+        }
     }
 
     pub fn get_rans(&self) -> Vec<&Ran> {
