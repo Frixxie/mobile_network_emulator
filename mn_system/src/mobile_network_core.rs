@@ -157,17 +157,17 @@ impl MobileNetworkCore {
                     break;
                 }
             };
-            info!(
-                "User with id {} and ip {} is using application {}",
-                user.user().get_id(),
-                user.ip(),
-                application.id()
-            );
             let res = network
                 .use_application(user, application, &user.get_ran().get_position())
                 .unwrap();
             network_logs.push(res);
         }
+        let avg_point: Point = some_users.cloned()
+            .map(|pdu_session| pdu_session.user().current_pos())
+            .reduce(|acc, point| acc + point)
+            .unwrap()
+            / some_users.len() as f64;
+        info!("avg point {},{}", avg_point.x(), avg_point.y());
         if !network_logs.is_empty() {
             collection.insert_many(network_logs, None).await.unwrap();
         }

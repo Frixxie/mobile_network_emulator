@@ -143,7 +143,7 @@ fn find_user_id(ip_addr: &str, events: &[MobileNetworkCoreEvent]) -> Vec<u32> {
         .collect()
 }
 
-fn find_location(ip_addr: &str, events: &[MobileNetworkCoreEvent]) -> Vec<(Point, u32)> {
+fn find_location(ip_addr: &str, events: &[MobileNetworkCoreEvent]) -> Option<(Point, u32)> {
     let mut user_ids = find_user_id(ip_addr, events);
     user_ids.par_sort();
     user_ids.dedup();
@@ -176,12 +176,46 @@ fn find_location(ip_addr: &str, events: &[MobileNetworkCoreEvent]) -> Vec<(Point
                         None
                     }
                 }
-            }).max_by(|(_, timestamp_a, _), (_, timestamp_b, _)| timestamp_a.cmp(timestamp_b)).unwrap();
+            }).max_by(|(_, t1, _), (_, t2, _)| t1.cmp(t2)).unwrap();
         res.push(position);
     }
     res.iter()
+        .max_by(|(_, t1, _), (_, t2, _)| t1.cmp(t2))
         .map(|(pos, _timestamp, id)| (pos.clone(), id.clone()))
+}
+
+async fn fetch_events(
+    collection: &Collection<MobileNetworkCoreEvent>,
+    time: u64,
+) -> Vec<MobileNetworkCoreEvent> {
+    collection
+        .find(
+            doc! {
+                "timestamp": doc! {
+                    "$gt": time as u32,
+
+                }
+            },
+            None,
+        )
+        .await
+        .unwrap()
+        .collect::<Vec<Result<_, _>>>()
+        .await
+        .iter()
+        .filter_map(|r| r.clone().ok())
         .collect()
+}
+
+fn calculate_suggested_position(points: &[(Point, usize)]) -> Option<Point> {
+    match points
+        .into_iter()
+        .cloned()
+        .reduce(|acc, (point, value)| (acc.0 + point, value))
+    {
+        Some(p) => Some(p.0 / points.len() as f64),
+        None => None,
+    }
 }
 
 #[tokio::main]
@@ -221,24 +255,9 @@ async fn main() {
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_secs()
-            - 240;
-        let events: Vec<MobileNetworkCoreEvent> = collection
-            .find(
-                doc! {
-                    "timestamp": doc! {
-                        "$gt": time as u32,
+            - 300;
 
-                    }
-                },
-                None,
-            )
-            .await
-            .unwrap()
-            .collect::<Vec<Result<_, _>>>()
-            .await
-            .iter()
-            .filter_map(|r| r.clone().ok())
-            .collect();
+        let events = fetch_events(&collection, time).await;
 
         let new_applications: Vec<Application> = fetch_all_applications(
             client.clone(),
@@ -252,37 +271,33 @@ async fn main() {
             println!("{}, {}", old.id, new.id);
             let diff = new.clone() - old.clone();
 
-            dbg!(&diff);
+            let mut avg_point = Vec::new();
             for (ip, value) in diff.times_used.iter() {
                 if value > &0 {
-                    println!(
-                        "Asking for position for ip {} who has used appliaction {} {} times",
-                        ip, diff.id, value
-                    );
-                    // let (point, id) = match find_location(ip, &events) {
-                    //     Some((point, id)) => (point, id),
-                    //     None => {
-                    //         println!("Failed to find position for ip {}", ip);
-                    //         continue;
-                    //     }
-                    // };
-
-                    let points = find_location(ip, &events);
-                    if points.len() > 0 {
-                        for (point, id) in points {
-                            println!(
-                                "{} with {}, should have pos ({},{})",
-                                ip,
-                                id,
-                                point.x(),
-                                point.y()
-                            );
+                    let (point, id) = match find_location(ip, &events) {
+                        Some((point, id)) => (point, id),
+                        None => {
+                            println!("Failed to find position for ip {}", ip);
+                            continue;
                         }
-                    } else {
-                        println!("failed to find position for {}", ip)
-                    }
+                    };
+                    println!(
+                        "{} with {}, should have pos ({},{})",
+                        ip,
+                        id,
+                        point.x(),
+                        point.y()
+                    );
+                    avg_point.push((point, value.clone()));
                 }
             }
+            let point = calculate_suggested_position(&avg_point).unwrap();
+            println!(
+                "avg point of users for application {} is ({},{})",
+                diff.id,
+                point.x(),
+                point.y()
+            )
         }
 
         applications = new_applications;
