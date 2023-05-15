@@ -32,9 +32,10 @@ use mobile_network_exposure_endpoints::{
 };
 use network::Network;
 use network_endpoints::{
-    add_application, delete_application, get_applications,
-    get_edge_data_centers, get_total_application_usage, NetworkWrapper,
+    add_application, delete_application, get_applications, get_edge_data_centers,
+    get_total_application_usage, NetworkWrapper,
 };
+use poisson_diskus::bridson;
 use ran::Ran;
 use rand::prelude::*;
 use simple_logger::SimpleLogger;
@@ -45,6 +46,15 @@ fn random_point(rng: &mut ThreadRng, range: &Range<f64>) -> Point {
     let x: f64 = rng.gen_range(range.start..range.end);
     let y: f64 = rng.gen_range(range.start..range.end);
     Point::new(x, y)
+}
+
+fn poisson_points(range: &Range<f64>, rmin: f32) -> Vec<Point> {
+    let input_range = [range.start, range.end];
+    bridson(&input_range, rmin.into(), 30, true)
+        .unwrap()
+        .into_iter()
+        .map(|a| Point::new(a[0], a[1]))
+        .collect()
 }
 
 #[derive(Debug, StructOpt)]
@@ -77,7 +87,7 @@ async fn main() -> std::io::Result<()> {
 
     let bounds = -500.0..500.;
     let num_users = 32;
-    let user_velocdity = 0.5;
+    let user_velocdity = 1.5;
     let num_rans = 16;
     let num_edge_data_centers = 8;
     let num_applications = 8;
@@ -90,10 +100,18 @@ async fn main() -> std::io::Result<()> {
         .map(|(id, starting_point)| User::new(id, starting_point, user_velocdity, &bounds))
         .collect();
 
-    let rans = (0u32..)
-        .take(num_rans)
-        .map(|id| (id, random_point(&mut rng, &bounds)))
-        .map(|(id, point)| Ran::new(id, point, 100.0))
+    // let rans = (0u32..)
+    //     .take(num_rans)
+    //     .map(|id| (id, random_point(&mut rng, &bounds)))
+    //     .map(|(id, point)| Ran::new(id, point, 100.0))
+    //     .collect();
+    let rans = poisson_points(&(1000.0..1000.0), 150.0)
+        .into_iter()
+        .enumerate()
+        .map(|(id, point)| {
+            let p = Point::new(point.x() - 500.0, point.y() - 500.0);
+            Ran::new(id as u32, p, 100.0)
+        })
         .collect();
 
     //TODO: Make sure that we only get unique ip addresses

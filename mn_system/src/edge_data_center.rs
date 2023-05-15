@@ -57,7 +57,7 @@ impl EdgeDataCenter {
             .add_application(application.clone())
             .map_err(|err| EdgeDataCenterError::new(format!("{}", err)))
         {
-            Ok(_) => Ok(*application.id()),
+            Ok(_) => Ok(application.id()),
             Err(err) => Err(err),
         }
     }
@@ -78,7 +78,7 @@ impl EdgeDataCenter {
         &mut self,
         ip_addr: IpAddr,
         application: &Application,
-    ) -> Result<u32, EdgeDataCenterError> {
+    ) -> Result<usize, EdgeDataCenterError> {
         self.application_runtime
             .use_application(ip_addr, application)
             .map_err(|err| EdgeDataCenterError::new(format!("{}", err)))

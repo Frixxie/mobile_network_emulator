@@ -1,4 +1,4 @@
-use std::{error::Error, fmt::Display, time::Duration};
+use std::{error::Error, fmt::Display, time::{Duration, SystemTime}};
 
 use geo::{EuclideanDistance, Point};
 use serde::Serialize;
@@ -32,6 +32,7 @@ pub struct NetworkLogEntry {
     ip_address: String,
     time_used: u64,
     application_id: u32,
+    timestamp: u64,
 }
 
 impl NetworkLogEntry {
@@ -41,6 +42,10 @@ impl NetworkLogEntry {
             ip_address,
             time_used,
             application_id,
+            timestamp: SystemTime::now()
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
         }
     }
 }
@@ -63,20 +68,22 @@ impl Network {
         match self
             .edge_data_centers
             .iter_mut()
-            .find(|edge_data_center| edge_data_center.contains_application(application.id()))
+            .find(|edge_data_center| edge_data_center.contains_application(&application.id()))
         {
             Some(edge_data_center) => {
                 //We know that the edge data center has the application.
                 let delay = Self::generate_delay(ran_position, edge_data_center.get_position());
+                let now = SystemTime::now();
                 let _usage = edge_data_center
                     .use_application(*user.ip(), application)
                     .unwrap();
 
+                let final_delay = now.elapsed().unwrap() + delay;
                 let network_log_entry = NetworkLogEntry::new(
                     user.user().get_id(),
                     user.ip().to_string(),
-                    delay.as_secs(),
-                    *application.id(),
+                    final_delay.as_secs(),
+                    application.id(),
                 );
 
                 Ok(network_log_entry)
@@ -150,7 +157,7 @@ impl Network {
 
     fn generate_delay(first_point: &Point, second_point: &Point) -> Duration {
         let distance = first_point.euclidean_distance(second_point).abs();
-        Duration::new((distance * 2.0) as u64, 0)
+        Duration::new((distance * 1.0) as u64, 0)
     }
 }
 

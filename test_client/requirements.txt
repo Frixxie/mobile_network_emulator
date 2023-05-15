@@ -1,3 +1,6 @@
 flask
 requests
 python-lsp-server
+matplotlib
+pymongo
+numpy

@@ -41,7 +41,7 @@ impl ApplicationRuntime {
         &mut self,
         application: Application,
     ) -> Result<(), ApplicationRuntimeError> {
-        if self.contains_application(application.id()) {
+        if self.contains_application(&application.id()) {
             return Err(ApplicationRuntimeError::new(
                 "Application already exists".to_string(),
             ));
@@ -69,11 +69,11 @@ impl ApplicationRuntime {
         &mut self,
         ip_addr: IpAddr,
         application: &Application,
-    ) -> Result<u32, ApplicationRuntimeError> {
+    ) -> Result<usize, ApplicationRuntimeError> {
         for current_application in self.applications.iter_mut() {
             if current_application.id() == application.id() {
                 current_application.add_use(ip_addr);
-                return Ok(current_application.get_use(&ip_addr));
+                return Ok(current_application.get_use(&ip_addr).len());
             }
         }
         Err(ApplicationRuntimeError::new(
@@ -84,7 +84,7 @@ impl ApplicationRuntime {
     pub fn contains_application(&self, id: &u32) -> bool {
         self.applications
             .iter()
-            .any(|application| application.id() == id)
+            .any(|application| application.id() == *id)
     }
 
     pub fn get_applications(&self) -> Vec<&Application> {
@@ -99,7 +99,7 @@ impl ApplicationRuntime {
         match self
             .applications
             .iter()
-            .find(|application| application.id() == &id)
+            .find(|application| application.id() == id)
         {
             Some(application) => Ok(application),
             None => Err(ApplicationRuntimeError::new(

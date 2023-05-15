@@ -1,7 +1,7 @@
 use std::{f64::consts::PI, fmt::Display, ops::Range};
 
 use geo::Point;
-use rand::{prelude::Distribution, rngs::ThreadRng};
+use rand::{prelude::Distribution, rngs::ThreadRng, seq::SliceRandom, Rng};
 use rand_distr::Normal;
 use serde::{ser::SerializeStruct, Serialize};
 
@@ -12,6 +12,7 @@ pub struct User {
     velocity: f64,
     bounds: Range<f64>,
     current_direction: (f64, f64),
+    last_application: usize,
 }
 
 impl Serialize for User {
@@ -46,6 +47,7 @@ impl User {
             velocity,
             bounds: bounds.clone(),
             current_direction: (1.0, 0.0),
+            last_application: 0,
         }
     }
 
@@ -55,6 +57,16 @@ impl User {
 
     pub fn current_pos(&self) -> Point {
         self.posititon
+    }
+
+    pub fn choose_application(&mut self, applications: &Vec<usize>) -> usize {
+        let mut rng = rand::thread_rng();
+        if rng.gen_range(0.0..1.0) > 0.5 {
+            return self.last_application;
+        }
+        let result = applications.choose(&mut rng).unwrap().clone();
+        self.last_application = result;
+        result
     }
 
     pub fn next_pos(&mut self) -> Point {
@@ -73,7 +85,7 @@ impl User {
         last_x /= length;
         last_y /= length;
 
-        let normal = Normal::new(0.0, PI / 16.0).unwrap();
+        let normal = Normal::new(0.0, PI / 32.0).unwrap();
 
         let mut alpha = normal.sample(rng);
         alpha = alpha.clamp(-PI, PI);

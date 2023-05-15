@@ -67,7 +67,7 @@ pub async fn update_user_positions(
     mnc.try_connect_orphans(&database).await;
     mnc.update_user_positions(&database).await;
     mnc.generate_location_events(&database).await;
-    mnc.use_some_applications(&mut network, &database).await;
+    mnc.use_applications(&mut network, &database).await;
     "OK"
 }
 

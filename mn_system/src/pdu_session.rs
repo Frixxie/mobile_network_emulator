@@ -28,6 +28,10 @@ impl PDUSession {
         &self.user
     }
 
+    pub fn user_mut(&mut self) -> &mut User {
+        &mut self.user
+    }
+
     pub fn update_user_position(&mut self) -> Point {
         self.user.next_pos()
     }

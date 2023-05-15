@@ -1,7 +1,7 @@
 use std::{
     hash::{Hash, Hasher},
     net::{Ipv4Addr, Ipv6Addr},
-    time::{SystemTime, UNIX_EPOCH},
+    time::{SystemTime, UNIX_EPOCH, Duration},
 };
 
 use geo::{Point, Polygon};
@@ -268,7 +268,7 @@ impl PdnConnectionInformation {
 pub struct MobileNetworkCoreEvent {
     event: Event,
     kind: EventKind,
-    timestamp: u64,
+    timestamp: Duration,
     user_id: u32,
 }
 
@@ -277,10 +277,7 @@ impl MobileNetworkCoreEvent {
         Self {
             event,
             kind,
-            timestamp: SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .unwrap()
-                .as_secs(),
+            timestamp: SystemTime::now().duration_since(UNIX_EPOCH).unwrap(),
             user_id,
         }
     }
@@ -297,7 +294,7 @@ impl MobileNetworkCoreEvent {
         self.user_id
     }
 
-    pub fn get_timestamp(&self) -> u64 {
+    pub fn get_timestamp(&self) -> Duration {
         self.timestamp
     }
 }

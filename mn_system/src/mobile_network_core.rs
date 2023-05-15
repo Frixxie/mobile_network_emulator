@@ -140,34 +140,35 @@ impl MobileNetworkCore {
         }
     }
 
-    pub async fn use_some_applications(&self, network: &mut Network, database: &Database) {
+    pub async fn use_applications(&mut self, network: &mut Network, database: &Database) {
         let collection: Collection<NetworkLogEntry> = database.collection("NetworkLog");
-        let connected_users = self.get_connected_users();
-        let some_users =
-            connected_users.choose_multiple(&mut rand::thread_rng(), connected_users.len() / 2);
-        let applications: Vec<Application> =
-            network.get_applictions().into_iter().cloned().collect();
+        let connected_users = self.get_connected_users_mut();
+        let applications: Vec<(Application, usize)> = network
+            .get_applictions()
+            .into_iter()
+            .cloned()
+            .map(|application| {
+                let id = application.id();
+                (application, id as usize)
+            })
+            .collect();
 
         let mut network_logs = Vec::new();
-        for user in some_users {
-            let application = match applications.choose(&mut rand::thread_rng()) {
-                Some(application) => application,
-                None => {
-                    info!("The application list is empty there is no application accessed for user with ip: {}", user.ip());
-                    break;
-                }
-            };
+        for user in connected_users {
+            let indexes = applications
+                .iter()
+                .map(|(application, id)| id.clone())
+                .collect();
+            let application_index = user.user_mut().choose_application(&indexes);
+            let application = applications
+                .iter()
+                .find(|(application, id)| id == &application_index)
+                .unwrap();
             let res = network
-                .use_application(user, application, &user.get_ran().get_position())
+                .use_application(user, &application.0, &user.get_ran().get_position())
                 .unwrap();
             network_logs.push(res);
         }
-        let avg_point: Point = some_users.cloned()
-            .map(|pdu_session| pdu_session.user().current_pos())
-            .reduce(|acc, point| acc + point)
-            .unwrap()
-            / some_users.len() as f64;
-        info!("avg point {},{}", avg_point.x(), avg_point.y());
         if !network_logs.is_empty() {
             collection.insert_many(network_logs, None).await.unwrap();
         }
@@ -181,6 +182,13 @@ impl MobileNetworkCore {
         self.rans
             .iter()
             .flat_map(|ran| ran.get_current_connected_users())
+            .collect()
+    }
+
+    pub fn get_connected_users_mut(&mut self) -> Vec<&mut PDUSession> {
+        self.rans
+            .iter_mut()
+            .flat_map(|ran| ran.get_current_connected_users_mut())
             .collect()
     }
 
