@@ -13,7 +13,6 @@ use mobile_network_core_event::{
     PositioningMethod,
 };
 use mongodb::{Collection, Database};
-use rand::seq::SliceRandom;
 
 use crate::{
     application::Application,
@@ -157,12 +156,12 @@ impl MobileNetworkCore {
         for user in connected_users {
             let indexes = applications
                 .iter()
-                .map(|(application, id)| id.clone())
+                .map(|(_application, id)| id.clone())
                 .collect();
             let application_index = user.user_mut().choose_application(&indexes);
             let application = applications
                 .iter()
-                .find(|(application, id)| id == &application_index)
+                .find(|(_application, id)| id == &application_index)
                 .unwrap();
             let res = network
                 .use_application(user, &application.0, &user.get_ran().get_position())
