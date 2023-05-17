@@ -156,7 +156,7 @@ impl MobileNetworkCore {
         for user in connected_users {
             let indexes = applications
                 .iter()
-                .map(|(_application, id)| id.clone())
+                .map(|(_application, id)| *id)
                 .collect();
             let application_index = user.user_mut().choose_application(&indexes);
             let application = applications

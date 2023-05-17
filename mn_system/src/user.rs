@@ -64,7 +64,7 @@ impl User {
         if rng.gen_range(0.0..1.0) > 0.5 {
             return self.last_application;
         }
-        let result = applications.choose(&mut rng).unwrap().clone();
+        let result = *applications.choose(&mut rng).unwrap();
         self.last_application = result;
         result
     }

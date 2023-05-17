@@ -75,7 +75,7 @@ pub async fn update_user_positions(
 pub async fn get_rans(
     mobile_network_core_wrapper: Data<MobileNetworkCoreWrapper>,
 ) -> impl Responder {
-    let users: Vec<Ran> = mobile_network_core_wrapper
+    let rans: Vec<Ran> = mobile_network_core_wrapper
         .mobile_network_core
         .read()
         .await
@@ -83,5 +83,5 @@ pub async fn get_rans(
         .into_iter()
         .cloned()
         .collect();
-    Json(users)
+    Json(rans)
 }

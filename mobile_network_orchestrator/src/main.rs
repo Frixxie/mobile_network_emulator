@@ -2,7 +2,9 @@ use std::{
     collections::HashMap,
     error::Error,
     fmt::Display,
+    process::Output,
     time::{Duration, SystemTime, UNIX_EPOCH},
+    unimplemented,
 };
 
 use futures::StreamExt;
@@ -44,6 +46,14 @@ impl Display for OrchestratorError {
 impl Error for OrchestratorError {}
 
 #[derive(Deserialize)]
+pub struct Ran {
+    id: u32,
+    radius: f64,
+    x: f64,
+    y: f64,
+}
+
+#[derive(Deserialize)]
 pub struct EdgeDataCenter {
     id: u32,
     name: String,
@@ -51,9 +61,13 @@ pub struct EdgeDataCenter {
     y: f64,
 }
 
+
 impl Display for EdgeDataCenter {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&format!("{}, {}, {},{}", self.id, self.name, self.x, self.y).to_string())
+        f.write_str(&format!(
+            "{}, {}, {},{}",
+            self.id, self.name, self.x, self.y
+        ))
     }
 }
 
@@ -97,7 +111,7 @@ impl std::ops::Sub for Application {
 
 impl Display for Application {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&format!("{}", self.id).to_string())
+        f.write_str(&format!("{}", self.id))
     }
 }
 
@@ -105,6 +119,19 @@ async fn fetch_edge_data_centers(
     client: Client,
     url: &str,
 ) -> Result<Vec<EdgeDataCenter>, OrchestratorError> {
+    match client.get(url).send().await {
+        Ok(response) => match response.json().await {
+            Ok(res) => Ok(res),
+            Err(e) => Err(OrchestratorError::new(&e.to_string())),
+        },
+        Err(e) => Err(OrchestratorError::new(&e.to_string())),
+    }
+}
+
+async fn fetch_rans(
+    client: Client,
+    url: &str,
+) -> Result<Vec<Ran>, OrchestratorError> {
     match client.get(url).send().await {
         Ok(response) => match response.json().await {
             Ok(res) => Ok(res),
@@ -210,6 +237,43 @@ fn find_user_id(
         })
 }
 
+fn find_ran(
+    ip_addr: &str,
+    timestamp_last_connected: &Duration,
+    events: &[MobileNetworkCoreEvent],
+) -> Option<Vec<(String, u32)>> {
+    let id = match find_user_id(ip_addr, timestamp_last_connected, events) {
+        Some(id) => id,
+        None => return None,
+    };
+    let mut res = Vec::new();
+    dbg!(id, *timestamp_last_connected - id.1);
+    let position = events
+        .into_par_iter()
+        .filter_map(|event| match event.get_event() {
+            mobile_network_core_event::Event::PdnConnectionEvent(_) => None,
+            mobile_network_core_event::Event::LocationReporting(location_event) => {
+                if event.get_user_id() == id.0 {
+                    Some((
+                        location_event.e_node_b_id.clone(),
+                        event.get_timestamp(),
+                        event.get_user_id(),
+                    ))
+                } else {
+                    None
+                }
+            }
+        })
+        .max_by(|(_, t1, _), (_, t2, _)| t1.cmp(t2))
+        .unwrap();
+    res.push(position);
+    Some(
+        res.iter()
+            .map(|(pos, _timestamp, id)| (pos.clone(), *id))
+            .collect(),
+    )
+}
+
 fn find_location(
     ip_addr: &str,
     timestamp_last_connected: &Duration,
@@ -226,25 +290,12 @@ fn find_location(
         .filter_map(|event| match event.get_event() {
             mobile_network_core_event::Event::PdnConnectionEvent(_) => None,
             mobile_network_core_event::Event::LocationReporting(location_event) => {
-                if event.get_user_id() == id.0.clone() {
+                if event.get_user_id() == id.0 {
                     match location_event.geographic_area {
                         mobile_network_core_event::GeographicArea::Point(p) => {
                             Some((p, event.get_timestamp(), event.get_user_id()))
                         }
-                        mobile_network_core_event::GeographicArea::PointUncertainCircle => {
-                            unimplemented!()
-                        }
-                        mobile_network_core_event::GeographicArea::PointUncertaintyEllipse => {
-                            unimplemented!()
-                        }
-                        mobile_network_core_event::GeographicArea::Polygon(_) => unimplemented!(),
-                        mobile_network_core_event::GeographicArea::PointAltitude => {
-                            unimplemented!()
-                        }
-                        mobile_network_core_event::GeographicArea::PointAlititudeUncertainity => {
-                            unimplemented!()
-                        }
-                        mobile_network_core_event::GeographicArea::EllipsoidArc => unimplemented!(),
+                        _ => unimplemented!(),
                     }
                 } else {
                     None
@@ -256,7 +307,7 @@ fn find_location(
     res.push(position);
     Some(
         res.iter()
-            .map(|(pos, _timestamp, id)| (pos.clone(), id.clone()))
+            .map(|(pos, _timestamp, id)| (*pos, *id))
             .collect(),
     )
 }
@@ -284,27 +335,13 @@ async fn fetch_events(
         .collect()
 }
 
-fn calculate_suggested_position_weighted_avg(
-    points: &[(Point, Vec<Duration>)],
-    edcs: &[EdgeDataCenter],
-) -> Option<usize> {
-    let avg = match points
-        .into_iter()
-        .cloned()
-        .reduce(|acc, (point, value)| (acc.0 + point * value.len() as f64, value))
-    {
-        Some(p) => {
-            p.0 / points
-                .iter()
-                .map(|(_point, value)| value.len())
-                .sum::<usize>() as f64
-        }
-        None => return None,
-    };
+fn find_edc(average_point: &Point, edcs: &[EdgeDataCenter]) -> Option<usize> {
     let mut min_index = 0;
     let mut min_length = f64::MAX;
     for (i, edc) in edcs.iter().enumerate() {
-        let dist = Point::new(edc.x, edc.y).euclidean_distance(&avg).abs();
+        let dist = Point::new(edc.x, edc.y)
+            .euclidean_distance(average_point)
+            .abs();
         if dist < min_length {
             min_index = i;
             min_length = dist;
@@ -318,33 +355,66 @@ fn calculate_suggested_position_weighted_avg(
     }
 }
 
+fn calculate_suggested_edc_weighted_avg(
+    points: &[(Point, Vec<Duration>)],
+    edcs: &[EdgeDataCenter],
+) -> Option<usize> {
+    let avg = match points
+        .iter()
+        .cloned()
+        .reduce(|acc, (point, value)| (acc.0 + point * value.len() as f64, value))
+    {
+        Some(p) => {
+            p.0 / points
+                .iter()
+                .map(|(_point, value)| value.len())
+                .sum::<usize>() as f64
+        }
+        None => return None,
+    };
+    find_edc(&avg, edcs)
+}
+
 fn calculate_suggested_position_avg(
     points: &[(Point, Vec<Duration>)],
     edcs: &[EdgeDataCenter],
 ) -> Option<usize> {
     let avg = match points
-        .into_iter()
+        .iter()
         .cloned()
         .reduce(|acc, (point, value)| (acc.0 + point, value))
     {
         Some(p) => p.0 / points.len() as f64,
         None => return None,
     };
-    let mut min_index = 0;
-    let mut min_length = f64::MAX;
-    for (i, edc) in edcs.iter().enumerate() {
-        let dist = Point::new(edc.x, edc.y).euclidean_distance(&avg).abs();
-        if dist < min_length {
-            min_index = i;
-            min_length = dist;
-            dbg!(min_length, min_index);
-        }
-    }
-    if min_length < f64::MAX {
-        Some(min_index)
-    } else {
-        None
-    }
+    find_edc(&avg, edcs)
+}
+
+fn distance_cost(ran: &Ran, edc: &EdgeDataCenter) -> f64 {
+    Point::new(ran.x, ran.y)
+        .euclidean_distance(&Point::new(edc.x, edc.y))
+        .abs()
+}
+
+fn min_edc<'a, 'b, F>(
+    application_usage: &'a [(Ran, usize)],
+    edcs: &'b [EdgeDataCenter],
+    cost_function: F,
+) -> Option<&'b EdgeDataCenter>
+where
+    F: Fn(&Ran, &EdgeDataCenter) -> f64,
+{
+    edcs.iter()
+        .map(|edc| {
+            let cost: f64 = application_usage
+                .iter()
+                .map(|(ran, accesses)| *accesses as f64 * cost_function(ran, edc))
+                .sum();
+            (edc, cost)
+        })
+        //this should be ok as we do not expect NaNs
+        .min_by(|(_edc, cost), (_rhs_edc, rhs_cost)| cost.partial_cmp(&rhs_cost).unwrap())
+        .map(|(edc, _cost)| edc)
 }
 
 #[tokio::main]
@@ -406,9 +476,9 @@ async fn main() {
 
             let diff = new_application.clone() - current_application.clone();
 
-            let mut avg_point = Vec::new();
+            let mut user_positions = Vec::new();
             for (ip, value) in diff.accesses.iter() {
-                if value.len() > 0 {
+                if !value.is_empty() {
                     dbg!(value.iter().max().unwrap(), events.len());
                     let points = match find_location(ip, value.iter().max().unwrap(), &events) {
                         Some(points) => points,
@@ -425,17 +495,18 @@ async fn main() {
                             point.x(),
                             point.y()
                         );
-                        avg_point.push((point, value.clone()));
+                        user_positions.push((point, value.clone()));
                     }
                 }
             }
-            if avg_point.len() > 0 {
-                let position =
-                    calculate_suggested_position_weighted_avg(&avg_point, &edge_data_centers).unwrap();
-                if *j != position {
-                    println!("Moving application from {} to {}", j, position);
+            if !user_positions.is_empty() {
+                let edc_index =
+                    calculate_suggested_edc_weighted_avg(&user_positions, &edge_data_centers)
+                        .unwrap();
+                if *j != edc_index {
+                    println!("Moving application from {} to {}", j, edc_index);
                     remove_application(diff.id, *j, base_url, client.clone()).await;
-                    add_application(diff.id, position, base_url, client.clone()).await
+                    add_application(diff.id, edc_index, base_url, client.clone()).await
                 }
             }
         }
