@@ -2,7 +2,6 @@ use std::{
     collections::HashMap,
     error::Error,
     fmt::Display,
-    process::Output,
     time::{Duration, SystemTime, UNIX_EPOCH},
     unimplemented,
 };
@@ -413,7 +412,7 @@ where
             (edc, cost)
         })
         //this should be ok as we do not expect NaNs
-        .min_by(|(_edc, cost), (_rhs_edc, rhs_cost)| cost.partial_cmp(&rhs_cost).unwrap())
+        .min_by(|(_edc, cost), (_rhs_edc, rhs_cost)| cost.partial_cmp(rhs_cost).unwrap())
         .map(|(edc, _cost)| edc)
 }
 
