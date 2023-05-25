@@ -464,7 +464,6 @@ async fn main() {
         )
         .await;
 
-        //TODO: It may become a problem if the applications are moved and they get out of order
         for (i, current_application) in applications.iter() {
             let (j, new_application) = new_applications
                 .iter()

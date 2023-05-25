@@ -86,7 +86,7 @@ async fn main() -> std::io::Result<()> {
     let db_client_data = Data::new(database);
 
     let bounds = -500.0..500.;
-    let num_users = 32;
+    let num_users = 128;
     let user_velocdity = 1.5;
     let _num_rans = 16;
     let num_edge_data_centers = 8;
@@ -130,11 +130,19 @@ async fn main() -> std::io::Result<()> {
     let mnce_wrapper = MobileNetworkExposureWrapper::new(mnce);
     let mnce_wrapper_data = Data::new(mnce_wrapper);
 
-    let mut edge_data_centers: Vec<EdgeDataCenter> = (0u32..)
-        .take(num_edge_data_centers)
-        .map(|id| (id, random_point(&mut rng, &bounds)))
-        .map(|(id, starting_point)| {
-            EdgeDataCenter::new(id, &format!("edc: {}", id), starting_point)
+    // let mut edge_data_centers: Vec<EdgeDataCenter> = (0u32..)
+    //     .take(num_edge_data_centers)
+    //     .map(|id| (id, random_point(&mut rng, &bounds)))
+    //     .map(|(id, starting_point)| {
+    //         EdgeDataCenter::new(id, &format!("edc: {}", id), starting_point)
+    //     })
+    //     .collect();
+    let mut edge_data_centers: Vec<EdgeDataCenter> = poisson_points(&(1000.0..1000.0), 200.0)
+        .into_iter()
+        .enumerate()
+        .map(|(id, point)| {
+            let p = Point::new(point.x() - 500.0, point.y() - 500.0);
+            EdgeDataCenter::new(id as u32, &format!("edc: {}", id), p)
         })
         .collect();
 

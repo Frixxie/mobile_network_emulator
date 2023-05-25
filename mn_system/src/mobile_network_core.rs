@@ -154,15 +154,21 @@ impl MobileNetworkCore {
 
         let mut network_logs = Vec::new();
         for user in connected_users {
-            let indexes = applications
-                .iter()
-                .map(|(_application, id)| *id)
-                .collect();
+            let indexes = applications.iter().map(|(_application, id)| *id).collect();
             let application_index = user.user_mut().choose_application(&indexes);
-            let application = applications
-                .iter()
-                .find(|(_application, id)| id == &application_index)
-                .unwrap();
+            let mut application;
+            loop {
+                match applications
+                    .iter()
+                    .find(|(_application, id)| id == &application_index)
+                {
+                    Some(a) => {
+                        application = a;
+                        break;
+                    }
+                    None => continue,
+                }
+            }
             let res = network
                 .use_application(user, &application.0, &user.get_ran().get_position())
                 .unwrap();

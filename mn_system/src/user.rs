@@ -41,13 +41,15 @@ impl Display for User {
 
 impl User {
     pub fn new(id: u32, posititon: Point, velocity: f64, bounds: &Range<f64>) -> Self {
+        let mut rng = rand::thread_rng();
+        let app = rng.gen_range(0..8);
         User {
             id,
             posititon,
             velocity,
             bounds: bounds.clone(),
             current_direction: (1.0, 0.0),
-            last_application: 0,
+            last_application: app,
         }
     }
 
@@ -61,7 +63,7 @@ impl User {
 
     pub fn choose_application(&mut self, applications: &Vec<usize>) -> usize {
         let mut rng = rand::thread_rng();
-        if rng.gen_range(0.0..1.0) > 0.5 {
+        if rng.gen_range(0.0..1.0) > 0.02 {
             return self.last_application;
         }
         let result = *applications.choose(&mut rng).unwrap();

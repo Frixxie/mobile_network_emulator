@@ -157,7 +157,7 @@ impl Network {
 
     fn generate_delay(first_point: &Point, second_point: &Point) -> Duration {
         let distance = first_point.euclidean_distance(second_point).abs();
-        Duration::new((distance * 1.0) as u64, 0)
+        Duration::new((distance * 1.5) as u64, 0)
     }
 }
 
