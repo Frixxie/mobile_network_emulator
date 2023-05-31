@@ -183,7 +183,7 @@ mod tests {
             .use_application(ip_addr, &application)
             .unwrap();
         let application_use = application_runtime.get_applications()[0].get_use(&ip_addr);
-        assert_eq!(application_use, 1);
+        assert_eq!(application_use.len(), 1);
     }
 
     #[test]

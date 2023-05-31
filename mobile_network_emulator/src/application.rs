@@ -63,7 +63,7 @@ mod tests {
         let application = Application::new(0);
         let id = application.id();
 
-        assert_eq!(*id, 0);
+        assert_eq!(id, 0);
     }
 
     #[test]

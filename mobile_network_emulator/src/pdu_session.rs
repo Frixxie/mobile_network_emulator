@@ -70,10 +70,10 @@ mod tests {
         let ip_address = Ipv4Addr::LOCALHOST;
         let ran = Ran::new(0, Point::new(0.0, 0.0), 100.0);
 
-        let pbu_session = PDUSession::new(user, std::net::IpAddr::V4(ip_address), &ran);
+        let pbu_session = PDUSession::new(user.clone(), std::net::IpAddr::V4(ip_address), &ran);
         let (user_1, ip_address_1) = pbu_session.release();
         assert_eq!(
-            User::new(1, Point::new(50.0, 50.0), 1.5, &(-50.0..50.0)),
+            user,
             user_1
         );
         assert_eq!(Ipv4Addr::LOCALHOST, ip_address_1);

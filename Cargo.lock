@@ -2557,14 +2557,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tokio_mpsc_test"
-version = "0.1.0"
-dependencies = [
- "actix-web",
- "tokio",
-]
-
-[[package]]
 name = "tower-service"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
