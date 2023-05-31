@@ -1,0 +1,11 @@
+digraph ast {
+    "Opt"[label="{Opt|#[structopt(short, long, default_value = "0.0.0.0")]
+    host: String\l#[structopt(short, long, default_value = "8080")]
+    port: u16\l#[structopt(short, long, default_value = "mongodb://localhost:27017/")]
+    db_connection_string: String}"][shape="record"];
+    "random_point"[label="random_point"];
+    "poisson_points"[label="poisson_points"];
+    "main"[label="main"];
+    "main" -> "random_point"[label=""][style="dashed"][arrowhead="vee"];
+    "main" -> "poisson_points"[label=""][style="dashed"][arrowhead="vee"];
+}

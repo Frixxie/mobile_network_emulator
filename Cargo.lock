@@ -1400,7 +1400,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "mn_system"
+name = "mobile_network_core_event"
+version = "0.1.0"
+dependencies = [
+ "geo",
+ "serde",
+ "url",
+]
+
+[[package]]
+name = "mobile_network_emulator"
 version = "0.1.0"
 dependencies = [
  "actix-cors",
@@ -1419,15 +1428,6 @@ dependencies = [
  "simple_logger",
  "structopt",
  "tokio",
- "url",
-]
-
-[[package]]
-name = "mobile_network_core_event"
-version = "0.1.0"
-dependencies = [
- "geo",
- "serde",
  "url",
 ]
 

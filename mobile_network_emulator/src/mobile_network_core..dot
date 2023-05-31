@@ -1,0 +1,8 @@
+digraph ast {
+    "MobileNetworkCore"[label="{MobileNetworkCore|rans: Vec<Ran>\lorphans: Vec<User>\lavailable_ip_addresses: Vec<IpAddr>|new(rans: Vec<Ran>, orphans: Vec<User>, ip_addesses: Vec<IpAddr>) -> Self\ltry_connect_orphans(&mut self, database: &Database)\lupdate_user_positions(&mut self, database: &Database)|user|\lgenerate_location_events(&self, database: &Database)|pdu_session|\luse_applications(&mut self, network: &mut Network, database: &Database)|application||(_application, id)||(_application, id)|\lget_rans(&self) -> Vec<&Ran>\lget_connected_users(&self) -> Vec<&PDUSession>|ran|\lget_connected_users_mut(&mut self) -> Vec<&mut PDUSession>|ran|\lget_all_users(&self) -> Vec<&User>|pdu_session|\lcreate_location_reporting_event(
+        ran_id: &str,
+        user_pos: Point,
+        ldr_type: LdrType,
+        user_id: u32,
+    ) -> MobileNetworkCoreEvent\lcreate_pdn_connection_event(ipv4_addr: Ipv4Addr, user_id: u32) -> MobileNetworkCoreEvent\lrelease_pdn_connection_event(ipv4_addr: Ipv4Addr, user_id: u32) -> MobileNetworkCoreEvent}"][shape="record"];
+}

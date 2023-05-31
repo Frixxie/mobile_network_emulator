@@ -1,5 +1,5 @@
 [package]
-name = "mn_system"
+name = "mobile_network_emulator"
 version = "0.1.0"
 edition = "2021"
 
