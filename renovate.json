@@ -1,3 +1,22 @@
 {
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json"
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "packageRules": [
+    {
+      "groupName": "Cargo",
+      "matchManagers": ["cargo"]
+    },
+    {
+      "groupName": "Docker",
+      "matchManagers": ["dockerfile"]
+    },
+    {
+      "groupName": "github",
+      "matchManagers": ["github-actions"]
+    },
+    {
+      "groupName": "python",
+      "matchManagers": ["pip_requirements"]
+    }
+  ],
+  "osvVulnerabilityAlerts": true
 }
