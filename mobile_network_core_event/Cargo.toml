@@ -6,6 +6,6 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-geo = "0.25.0"
-serde = "1.0.163"
-url = "2.3.1"
+geo = "0.26.0"
+serde = "1.0.188"
+url = "2.4.1"
