@@ -2,8 +2,19 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "packageRules": [
     {
-      "groupName": "Cargo",
-      "matchManagers": ["cargo"]
+      "groupName": "Cargo (minor/patch)",
+      "matchManagers": ["cargo"],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ]
+    },
+    {
+      "groupName": "Cargo (major)",
+      "matchManagers": ["cargo"],
+      "matchUpdateTypes": [
+          "major"
+      ]
     },
     {
       "groupName": "Docker",
@@ -15,7 +26,18 @@
     },
     {
       "groupName": "Npm",
-      "matchManagers": ["npm"]
+      "matchManagers": ["npm"],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ]
+    },
+    {
+      "groupName": "Npm",
+      "matchManagers": ["npm"],
+      "matchUpdateTypes": [
+          "major"
+      ]
     },
     {
       "groupName": "python",
