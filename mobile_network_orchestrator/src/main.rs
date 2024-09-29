@@ -60,7 +60,6 @@ pub struct EdgeDataCenter {
     y: f64,
 }
 
-
 impl Display for EdgeDataCenter {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(&format!(
@@ -127,10 +126,7 @@ async fn fetch_edge_data_centers(
     }
 }
 
-async fn fetch_rans(
-    client: Client,
-    url: &str,
-) -> Result<Vec<Ran>, OrchestratorError> {
+async fn fetch_rans(client: Client, url: &str) -> Result<Vec<Ran>, OrchestratorError> {
     match client.get(url).send().await {
         Ok(response) => match response.json().await {
             Ok(res) => Ok(res),
@@ -316,15 +312,7 @@ async fn fetch_events(
     _time: u64,
 ) -> Vec<MobileNetworkCoreEvent> {
     collection
-        .find(
-            //     doc! {
-            //         "timestamp": doc! {
-            //             "$gt": time as u32,
-
-            //         }
-            //     },
-            None, None,
-        )
+        .find(doc! {})
         .await
         .unwrap()
         .collect::<Vec<Result<_, _>>>()

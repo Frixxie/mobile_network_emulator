@@ -1,11 +1,11 @@
 use std::collections::HashSet;
 
 use futures::StreamExt;
-use mongodb::{Collection, Database};
+use mongodb::{bson::doc, Collection, Database};
 use reqwest::Client;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
-use mobile_network_core_event::{MobileNetworkCoreEvent, EventKind};
+use mobile_network_core_event::{EventKind, MobileNetworkCoreEvent};
 use url::Url;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -90,7 +90,8 @@ impl MobileNetworkExposure {
                             .subscriber
                             .get_user_ids()
                             .contains(&&event.get_user_id())
-                }).cloned()
+                })
+                .cloned()
                 .collect();
             self.http_client
                 .post(subscriber.subscriber.get_notify_endpoint())
@@ -107,7 +108,7 @@ impl MobileNetworkExposure {
     pub async fn get_events(&self, database: &Database) -> Vec<MobileNetworkCoreEvent> {
         let collection: Collection<MobileNetworkCoreEvent> = database.collection("Events");
         collection
-            .find(None, None)
+            .find(doc! {})
             .await
             .unwrap()
             .collect::<Vec<Result<_, _>>>()

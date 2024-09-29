@@ -1,2 +1,3 @@
 [workspace]
 members = ["mobile_network_emulator", "mobile_network_orchestrator", "subscriber", "mobile_network_core_event"]
+resolver = "2"

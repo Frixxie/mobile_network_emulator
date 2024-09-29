@@ -71,7 +71,7 @@ impl MobileNetworkCore {
         }
         self.orphans = tmp_orphans;
         if !new_events.is_empty() {
-            collection.insert_many(new_events, None).await.unwrap();
+            collection.insert_many(new_events).await.unwrap();
         }
     }
 
@@ -116,7 +116,7 @@ impl MobileNetworkCore {
         }
         self.orphans.append(&mut new_orphans);
         if !new_events.is_empty() {
-            collection.insert_many(new_events, None).await.unwrap();
+            collection.insert_many(new_events).await.unwrap();
         }
     }
 
@@ -135,7 +135,7 @@ impl MobileNetworkCore {
             })
             .collect();
         if !all_events.is_empty() {
-            collection.insert_many(all_events, None).await.unwrap();
+            collection.insert_many(all_events).await.unwrap();
         }
     }
 
@@ -175,7 +175,7 @@ impl MobileNetworkCore {
             network_logs.push(res);
         }
         if !network_logs.is_empty() {
-            collection.insert_many(network_logs, None).await.unwrap();
+            collection.insert_many(network_logs).await.unwrap();
         }
     }
 
